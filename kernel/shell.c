@@ -11,11 +11,12 @@
 #define COMMAND_ABOUT 8
 
 #define TOTAL_SHELL_COMMANDS 8
+#define MAX_COMMAND_LENGTH 500
 
-#define EMPTY_SPACE " "
-#define TERMINAL_SYMBOL ">"
-#define NEXT_LINE "\n"
-#define TAB_SPACE "\t"
+#define EMPTY_SPACE ' '
+#define TERMINAL_SYMBOL '>'
+#define NEXT_LINE '\n'
+#define TAB_SPACE '\t'
 
 static char* shell_commands[] = {
 									"man [command]",
@@ -34,11 +35,11 @@ struct available_commands{
 	char* description;
 };
 
-struct available_commands command_man = {COMMAND_MAN, "man[command]", "Print a short description for a command or list all commands"};
+struct available_commands command_man = {COMMAND_MAN, "man [command]", "Print a short description for a command or list all commands"};
 struct available_commands command_clear = {COMMAND_CLEAR, "clear", "Clear the current window"};
 struct available_commands command_shell = {COMMAND_SHELL, "shell", "Launch a new Shell"};
 struct available_commands command_pong = {COMMAND_PONG, "pong", "Launch a Ping Pong game"};
-struct available_commands command_echo = {COMMAND_ECHO, "echo<message>", "Print a message on the Screen"};
+struct available_commands command_echo = {COMMAND_ECHO, "echo <message>", "Print a message on the Screen"};
 struct available_commands command_ps = {COMMAND_PS, "ps [-d]", "Print a list of TOS processes"};
 struct available_commands command_top = {COMMAND_TOP, "top", "Print the Process table every second until interrupted"};
 struct available_commands command_about = {COMMAND_ABOUT, "about", "Print your name"};
@@ -102,8 +103,9 @@ void print_about(int window_id){
 }
 
 
-void execute_shell_commands(int window_id, int command){
-	switch(command){
+void execute_shell_commands(int window_id, int command_id){
+	wm_print(window_id, "Does control come here? %d\n", command_id);
+	switch(command_id){
 		case COMMAND_MAN:
 			call_man();
 		break;
@@ -147,21 +149,26 @@ void shell_process(PROCESS process, PARAM param){
 	wm_print(window_id, TERMINAL_SYMBOL);
 	view_available_commands(window_id);
 	while(1){
+		char* command = malloc(MAX_COMMAND_LENGTH);
+		int command_index = 0;
 		char key = keyb_get_keystroke(window_id, TRUE);
-		wm_print(window_id, ("The option that you chose is: %c\n", key));
+		int command_id = key - '0';
+		wm_print(window_id, ("The option that you chose is: %d\n", command_id));
+
 		if(key == EMPTY_SPACE){
 			wm_print(window_id, EMPTY_SPACE);
 		}
 		else if(key == NEXT_LINE){
 			wm_print(window_id, "\n");
+			if(strstr(command)
 		}
 		else if(key == TAB_SPACE){
 			wm_print(window_id, "\t");
 		}
 		else{
-			int command = key - '0';
-			wm_print(window_id, command);
-			// execute_shell_commands();
+			command[command_index] = key;
+			command_index++;
+			// execute_shell_commands(window_id, command_id);
 		}
 	}
 }
