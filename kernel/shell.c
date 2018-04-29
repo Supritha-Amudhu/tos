@@ -18,17 +18,6 @@
 #define NEXT_LINE '\n'
 #define TAB_SPACE '\t'
 
-static char* shell_commands[] = {
-									"man [command]",
-									"clear",
-									"shell",
-									"pong",
-									"echo <message>",
-									"ps [-d]",
-									"top",
-									"about"
-								};
-
 struct available_commands{
 	int key;
 	char* command;
@@ -43,6 +32,21 @@ struct available_commands command_echo = {COMMAND_ECHO, "echo <message>", "Print
 struct available_commands command_ps = {COMMAND_PS, "ps [-d]", "Print a list of TOS processes"};
 struct available_commands command_top = {COMMAND_TOP, "top", "Print the Process table every second until interrupted"};
 struct available_commands command_about = {COMMAND_ABOUT, "about", "Print your name"};
+
+
+
+static char* shell_commands[] = {
+									command_man.command,
+									command_clear.command,
+									command_shell.command,
+									command_pong.command,
+									command_echo.command,
+									command_ps.command,
+									command_top.command,
+									command_about.command
+								};
+
+
 
 //This method will list all available commands in Shell by providing the window ID and the content to be displayed.
 void view_available_commands(int window_id){
@@ -153,24 +157,32 @@ void shell_process(PROCESS process, PARAM param){
 		int command_index = 0;
 		char key = keyb_get_keystroke(window_id, TRUE);
 		int command_id = key - '0';
-		wm_print(window_id, ("The option that you chose is: %d\n", command_id));
 
 		if(key == EMPTY_SPACE){
+			wm_print(window_id, "You printed an empty space.\n");
 			wm_print(window_id, EMPTY_SPACE);
 		}
-		else if(key == NEXT_LINE){
+		else if(key == NEXT_LINE || key == 13){
+			wm_print(window_id, "You pressed Enter.\n");
 			wm_print(window_id, "\n");
-			if(strstr(command)
+			find_command(window_id, command_id, command);
 		}
 		else if(key == TAB_SPACE){
+			wm_print(window_id, "You pressed Tab");
 			wm_print(window_id, "\t");
 		}
 		else{
+			wm_print(window_id, "You printed a character.\n");
 			command[command_index] = key;
 			command_index++;
 			// execute_shell_commands(window_id, command_id);
 		}
 	}
+}
+
+int find_command(int window_id, int command_id, char* command){
+	wm_print(window_id, "Yayyyyy.\n");
+	wm_print(window_id, command);
 }
 
 
