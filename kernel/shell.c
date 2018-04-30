@@ -1,6 +1,6 @@
 #include <kernel.h>
 
-#define COMMAND_ALL 10
+#define COMMAND_ALL 8
 #define COMMAND_MAN 0
 #define COMMAND_CLEAR 1
 #define COMMAND_SHELL 2
@@ -14,7 +14,7 @@
 #define MAX_COMMAND_LENGTH 500
 
 #define EMPTY_SPACE ' '
-#define TERMINAL_SYMBOL '>'
+#define TERMINAL_SYMBOL ">>"
 #define NEXT_LINE '\n'
 #define TAB_SPACE '\t'
 
@@ -32,6 +32,7 @@ struct available_commands command_echo = {COMMAND_ECHO+1, "echo <message>", "Pri
 struct available_commands command_ps = {COMMAND_PS+1, "ps [-d]", "Print a list of TOS processes"};
 struct available_commands command_top = {COMMAND_TOP+1, "top", "Print the Process table every second until interrupted"};
 struct available_commands command_about = {COMMAND_ABOUT+1, "about", "Print your name"};
+struct available_commands command_list = {COMMAND_ALL+1, "list all options", "Lists all available options"};
 
 
 
@@ -54,7 +55,8 @@ static char* shell_commands[8][2] = {
 							{"echo", "Print a message on the Screen"},
 							{"ps", "Print a list of TOS processes"},
 							{"top", "Print the Process table every second until interrupted"},
-							{"about", "Print your name"}
+							{"about", "Print your name"},
+							{"list", "Lists all available options"}
 						};
 
 
@@ -70,8 +72,8 @@ void view_available_commands(int window_id){
 	wm_print(window_id, "%d. %s 			-		%s\n", command_ps.key, command_ps.command, command_ps.description);
 	wm_print(window_id, "%d. %s 			-		%s\n", command_top.key, command_top.command, command_top.description);
 	wm_print(window_id, "%d. %s 			-		%s\n", command_about.key, command_about.command, command_about.description);
+	wm_print(window_id, "%d. %s 			-		%s\n", command_list.key, command_list.command, command_list.description);
 	wm_print(window_id, "Please choose an option:\n");
-	wm_print(window_id, TERMINAL_SYMBOL);
 }
 
 
@@ -83,6 +85,7 @@ void call_man(int window_id, int command_id){
 	}
 	else{
 		view_available_commands(window_id);
+		wm_print(window_id, TERMINAL_SYMBOL);
 	}
 }
 
@@ -124,6 +127,10 @@ void print_about(int window_id){
 	wm_print(window_id, "Hey there! I am Supritha Amudhu, a passionate programmer and a bibliophile. :)\n");
 }
 
+void list_options(int window_id){
+	view_available_commands(window_id);
+}
+
 
 void execute_shell_commands(int window_id, int command_id){
 	switch(command_id){
@@ -159,11 +166,15 @@ void execute_shell_commands(int window_id, int command_id){
 			print_about(window_id);
 		break;
 
+		case COMMAND_ALL:
+			list_options(window_id);
+		break;
+
 		default:
 			wm_print(window_id, "Sorry, command not found. Please try another command.\n");
 		break;
 	};
-	view_available_commands(window_id);
+	wm_print(window_id, TERMINAL_SYMBOL);
 }
 
 
@@ -226,6 +237,7 @@ void shell_process(PROCESS process, PARAM param){
 	int window_id = wm_create(5, 2, 60, 18);
 	wm_print(window_id, TERMINAL_SYMBOL);
 	view_available_commands(window_id);
+	wm_print(window_id, TERMINAL_SYMBOL);
 	char* command = malloc(MAX_COMMAND_LENGTH);
 	int command_index = 0;
 
