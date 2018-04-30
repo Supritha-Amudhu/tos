@@ -61,7 +61,7 @@ static char* shell_commands[8][2] = {
 
 //This method will list all available commands in Shell by providing the window ID and the content to be displayed.
 void view_available_commands(int window_id){
-	wm_print(window_id, "These are the cool Shell operations that you can perform! Try them :)\n");
+	// wm_print(window_id, "These are the cool Shell operations that you can perform! Try them :)\n");
 	wm_print(window_id, "%d. %s 			-		%s\n", command_man.key, command_man.command, command_man.description);
 	wm_print(window_id, "%d. %s 			-		%s\n", command_clear.key, command_clear.command, command_clear.description);
 	wm_print(window_id, "%d. %s 			-		%s\n", command_shell.key, command_shell.command, command_shell.description);
@@ -71,12 +71,19 @@ void view_available_commands(int window_id){
 	wm_print(window_id, "%d. %s 			-		%s\n", command_top.key, command_top.command, command_top.description);
 	wm_print(window_id, "%d. %s 			-		%s\n", command_about.key, command_about.command, command_about.description);
 	wm_print(window_id, "Please choose an option:\n");
+	wm_print(window_id, TERMINAL_SYMBOL);
 }
 
 
 
-void call_man(int window_id, int index){
-	wm_print(window_id, shell_commands[index][1]);
+void call_man(int window_id, int command_id){
+	char* command_name = '\0';
+	if(command_name){
+		wm_print(window_id, shell_commands[command_id][1]);
+	}
+	else{
+		view_available_commands(window_id);
+	}
 }
 
 
@@ -114,19 +121,18 @@ void print_processes_until_interrupt(){
 
 
 void print_about(int window_id){
-	wm_print(window_id, "Hey there! I am Supritha Amudhu, a passionate programmer and a bibliophile. :)");
+	wm_print(window_id, "Hey there! I am Supritha Amudhu, a passionate programmer and a bibliophile. :)\n");
 }
 
 
 void execute_shell_commands(int window_id, int command_id){
-	wm_print(window_id, "Does control come here? %d\n", command_id);
 	switch(command_id){
 		case COMMAND_MAN:
-			call_man(window_id, index);
+			call_man(window_id, command_id);
 		break;
 
 		case COMMAND_CLEAR:
-			clear_screen(5);
+			clear_screen(window_id);
 		break;
 
 		case COMMAND_SHELL:
@@ -138,11 +144,11 @@ void execute_shell_commands(int window_id, int command_id){
 		break;
 
 		case COMMAND_ECHO:
-			print_echo_message(5, "Testing echo");
+			print_echo_message(window_id, "Testing echo");
 		break;
 
 		case COMMAND_PS:
-			list_processes(5);
+			list_processes(window_id);
 		break;
 
 		case COMMAND_TOP:
@@ -150,13 +156,14 @@ void execute_shell_commands(int window_id, int command_id){
 		break;
 
 		case COMMAND_ABOUT:
-			print_about(5);
+			print_about(window_id);
 		break;
 
 		default:
 			wm_print(window_id, "Sorry, command not found. Please try another command.\n");
 		break;
 	};
+	view_available_commands(window_id);
 }
 
 
@@ -202,18 +209,15 @@ int str_compare(char* first_string, char* second_string){
 }
 
 int find_command(int window_id, int command_id, char* command, int command_length){
-	wm_print(window_id, "The text entered is: %s\n", command);
 	// char* command_trimmed = trim_white_spaces(window_id, command, command_length);
-	wm_print(window_id, ("The command you entered is: %s\n", command));
 	for(int index = 0; index < 8; index++){
 		char* command_string = shell_commands[index][0];
 		if(str_compare(command, command_string) == 1){
 			execute_shell_commands(window_id, index);
-		}
-		else{
-			// wm_print(window_id, "No matching command.\n");
+			return 0;
 		}
 	}
+	execute_shell_commands(window_id, 55);
 }
 
 
@@ -230,23 +234,21 @@ void shell_process(PROCESS process, PARAM param){
 		int command_id = key - '0';
 
 		if(key == EMPTY_SPACE){
-			wm_print(window_id, "You printed an empty space.\n");
 			wm_print(window_id, EMPTY_SPACE);
 		}
 		else if(key == NEXT_LINE || key == 13){
-			wm_print(window_id, "You pressed Enter.\n");
 			wm_print(window_id, "\n");
 			find_command(window_id, command_id, command, command_index);
+			command = malloc(MAX_COMMAND_LENGTH);
+			command_index = 0;
 		}
 		else if(key == TAB_SPACE){
-			wm_print(window_id, "You pressed Tab");
 			wm_print(window_id, "\t");
 		}
 		else{
-			wm_print(window_id, "You printed a character %c\n", key);
+			wm_print(window_id, "%c", key);
 			command[command_index] = key;
 			command_index++;
-			// execute_shell_commands(window_id, command_id);
 		}
 	}
 }
