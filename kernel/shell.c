@@ -1,14 +1,14 @@
 #include <kernel.h>
 
-#define COMMAND_ALL 0
-#define COMMAND_MAN 1
-#define COMMAND_CLEAR 2
-#define COMMAND_SHELL 3
-#define COMMAND_PONG 4
-#define COMMAND_ECHO 5
-#define COMMAND_PS 6
-#define COMMAND_TOP 7
-#define COMMAND_ABOUT 8
+#define COMMAND_ALL 10
+#define COMMAND_MAN 0
+#define COMMAND_CLEAR 1
+#define COMMAND_SHELL 2
+#define COMMAND_PONG 3
+#define COMMAND_ECHO 4
+#define COMMAND_PS 5
+#define COMMAND_TOP 6
+#define COMMAND_ABOUT 7
 
 #define TOTAL_SHELL_COMMANDS 8
 #define MAX_COMMAND_LENGTH 500
@@ -24,27 +24,38 @@ struct available_commands{
 	char* description;
 };
 
-struct available_commands command_man = {COMMAND_MAN, "man [command]", "Print a short description for a command or list all commands"};
-struct available_commands command_clear = {COMMAND_CLEAR, "clear", "Clear the current window"};
-struct available_commands command_shell = {COMMAND_SHELL, "shell", "Launch a new Shell"};
-struct available_commands command_pong = {COMMAND_PONG, "pong", "Launch a Ping Pong game"};
-struct available_commands command_echo = {COMMAND_ECHO, "echo <message>", "Print a message on the Screen"};
-struct available_commands command_ps = {COMMAND_PS, "ps [-d]", "Print a list of TOS processes"};
-struct available_commands command_top = {COMMAND_TOP, "top", "Print the Process table every second until interrupted"};
-struct available_commands command_about = {COMMAND_ABOUT, "about", "Print your name"};
+struct available_commands command_man = {COMMAND_MAN+1, "man [command]", "Print a short description for a command or list all commands"};
+struct available_commands command_clear = {COMMAND_CLEAR+1, "clear", "Clear the current window"};
+struct available_commands command_shell = {COMMAND_SHELL+1, "shell", "Launch a new Shell"};
+struct available_commands command_pong = {COMMAND_PONG+1, "pong", "Launch a Ping Pong game"};
+struct available_commands command_echo = {COMMAND_ECHO+1, "echo <message>", "Print a message on the Screen"};
+struct available_commands command_ps = {COMMAND_PS+1, "ps [-d]", "Print a list of TOS processes"};
+struct available_commands command_top = {COMMAND_TOP+1, "top", "Print the Process table every second until interrupted"};
+struct available_commands command_about = {COMMAND_ABOUT+1, "about", "Print your name"};
 
 
 
-static char* shell_commands[] = {
-									command_man.command,
-									command_clear.command,
-									command_shell.command,
-									command_pong.command,
-									command_echo.command,
-									command_ps.command,
-									command_top.command,
-									command_about.command
-								};
+// static char* shell_commands[] = {
+// 							command_man.command,
+// 							command_clear.command,
+// 							command_shell.command,
+// 							command_pong.command,
+// 							command_echo.command,
+// 							command_ps.command,
+// 							command_top.command,
+// 							command_about.command
+// 						};
+
+static char* shell_commands[8][2] = {
+							{"man", "Print a short description for a command or list all commands"},
+							{"clear", "Clear the current window"},
+							{"shell", "Launch a new Shell"},
+							{"pong", "Launch a Ping Pong game"},
+							{"echo", "Print a message on the Screen"},
+							{"ps", "Print a list of TOS processes"},
+							{"top", "Print the Process table every second until interrupted"},
+							{"about", "Print your name"}
+						};
 
 
 
@@ -64,8 +75,8 @@ void view_available_commands(int window_id){
 
 
 
-void call_man(){
-
+void call_man(int window_id, int index){
+	wm_print(window_id, shell_commands[index][1]);
 }
 
 
@@ -111,7 +122,7 @@ void execute_shell_commands(int window_id, int command_id){
 	wm_print(window_id, "Does control come here? %d\n", command_id);
 	switch(command_id){
 		case COMMAND_MAN:
-			call_man();
+			call_man(window_id, index);
 		break;
 
 		case COMMAND_CLEAR:
@@ -148,13 +159,73 @@ void execute_shell_commands(int window_id, int command_id){
 	};
 }
 
+
+char* trim_white_spaces(int window_id, char* input, int input_length){
+	// char* output;
+
+	//Trim leading white space
+	int i = 0;
+	while(input[i] == EMPTY_SPACE && i < input_length){
+		i++;
+		wm_print(window_id, "Trim leading white space: %s\n", input);
+	} 
+
+	//If all the characters is empty space
+	if(*input = 0){
+		wm_print(window_id, "All characters empty space: %s\n", input);
+		return input;
+	}
+
+	//Trim trailing white space
+	// output = input;// + strlen(input) - 1;
+	// int o = input_length;
+	// while((output > input) && (output[o] == EMPTY_SPACE)){
+	// 	output--;	
+	// 	wm_print(window_id, "Trim trailing white space: %s\n", output);
+	// } 
+	// *(output+1) = 0;
+	wm_print(window_id, "Final trimmed output: %s\n", input);
+	return input; 
+}
+
+int str_compare(char* first_string, char* second_string){
+	int index = 0;
+	while(first_string[index] == second_string[index] && first_string[index] != '\0'){
+		index++;
+	}
+	if(first_string[index] != second_string[index]){
+		return 0;
+	}
+	else{
+		return 1;
+	}
+}
+
+int find_command(int window_id, int command_id, char* command, int command_length){
+	wm_print(window_id, "The text entered is: %s\n", command);
+	// char* command_trimmed = trim_white_spaces(window_id, command, command_length);
+	wm_print(window_id, ("The command you entered is: %s\n", command));
+	for(int index = 0; index < 8; index++){
+		char* command_string = shell_commands[index][0];
+		if(str_compare(command, command_string) == 1){
+			execute_shell_commands(window_id, index);
+		}
+		else{
+			// wm_print(window_id, "No matching command.\n");
+		}
+	}
+}
+
+
+
 void shell_process(PROCESS process, PARAM param){
 	int window_id = wm_create(5, 2, 60, 18);
 	wm_print(window_id, TERMINAL_SYMBOL);
 	view_available_commands(window_id);
+	char* command = malloc(MAX_COMMAND_LENGTH);
+	int command_index = 0;
+
 	while(1){
-		char* command = malloc(MAX_COMMAND_LENGTH);
-		int command_index = 0;
 		char key = keyb_get_keystroke(window_id, TRUE);
 		int command_id = key - '0';
 
@@ -165,24 +236,19 @@ void shell_process(PROCESS process, PARAM param){
 		else if(key == NEXT_LINE || key == 13){
 			wm_print(window_id, "You pressed Enter.\n");
 			wm_print(window_id, "\n");
-			find_command(window_id, command_id, command);
+			find_command(window_id, command_id, command, command_index);
 		}
 		else if(key == TAB_SPACE){
 			wm_print(window_id, "You pressed Tab");
 			wm_print(window_id, "\t");
 		}
 		else{
-			wm_print(window_id, "You printed a character.\n");
+			wm_print(window_id, "You printed a character %c\n", key);
 			command[command_index] = key;
 			command_index++;
 			// execute_shell_commands(window_id, command_id);
 		}
 	}
-}
-
-int find_command(int window_id, int command_id, char* command){
-	wm_print(window_id, "Yayyyyy.\n");
-	wm_print(window_id, command);
 }
 
 
