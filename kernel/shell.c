@@ -77,6 +77,99 @@ void view_available_commands(int window_id){
 }
 
 
+// List of all helper processes
+
+char* trim_white_spaces(int window_id, char* input, int input_length){
+	// char* output;
+
+	//Trim leading white space
+	int i = 0;
+	while(input[i] == EMPTY_SPACE && i < input_length){
+		i++;
+		wm_print(window_id, "Trim leading white space: %s\n", input);
+	} 
+
+	//If all the characters is empty space
+	if(*input = 0){
+		wm_print(window_id, "All characters empty space: %s\n", input);
+		return input;
+	}
+
+	//Trim trailing white space
+	// output = input;// + strlen(input) - 1;
+	// int o = input_length;
+	// while((output > input) && (output[o] == EMPTY_SPACE)){
+	// 	output--;	
+	// 	wm_print(window_id, "Trim trailing white space: %s\n", output);
+	// } 
+	// *(output+1) = 0;
+	// wm_print(window_id, "Final trimmed output: %s\n", input);
+	return input; 
+}
+
+int str_compare(char* first_string, char* second_string){
+	int index = 0;
+	while(first_string[index] == second_string[index] && first_string[index] != '\0'){
+		index++;
+	}
+	if(first_string[index] != second_string[index]){
+		return 0;
+	}
+	else{
+		return 1;
+	}
+}
+
+int find_command(int window_id, int command_id, char* command, int command_length){
+	// char* command_trimmed = trim_white_spaces(window_id, command, command_length);
+	for(int index = 0; index < 8; index++){
+		char* command_string = shell_commands[index][0];
+		if(str_compare(command, command_string) == 1){
+			execute_shell_commands(window_id, index);
+			return 0;
+		}
+	}
+	execute_shell_commands(window_id, 55);
+}
+
+
+void shell_print_process_headings(int window_id){
+	wm_print(window_id, "Comes here?\n");
+	wm_print(window_id, "State 				Active	 Priority	Name\n");
+	wm_print(window_id, "-------------------------------------------\n");
+}
+
+void shell_print_process_details(int window_id, PROCESS process){
+	wm_print(window_id, "Prints details?\n");
+	static const char* process_states = 
+						{
+							"READY			",
+							"ZOMBIE			",
+							"SEND_BLOCKED	",
+							"REPLY_BLOCKED	",
+							"RECEIVE_BLOCKED",
+							"MESSAGE_BLOCKED",
+							"INTR_BLOCKED	"
+						};
+	if(!process->used){
+		wm_print(window_id, "PCB slot unused.\n");
+		return;
+	}
+	wm_print(window_id, process_states[process->state]);
+	//Check for active proc, if active print *, if not print an empty space and the rest of the details
+	if(process == active_proc){
+		wm_print(window_id, " *			");
+	}
+	else{
+		wm_print(window_id, "			");
+		wm_print(window_id, process->priority);
+		wm_print(window_id, process->name);
+	}
+}
+
+
+
+// Main shell commands
 
 void call_man(int window_id, int command_id){
 	char* command_name = '\0';
@@ -114,7 +207,16 @@ void print_echo_message(int window_id, char* message){
 
 //Calls the ps [-d] command to list all processes on TOS
 void list_processes(int window_id){
-
+	wm_print(window_id, "Initial method visited?\n");
+	PCB* process = pcb;
+	shell_print_process_headings(window_id);
+	for(int index=0; index < MAX_PROCS; index++){
+		if(!process->used){
+			continue;
+		}
+		shell_print_process_details(window_id, process);	
+	}
+	
 }
 
 
@@ -177,59 +279,6 @@ void execute_shell_commands(int window_id, int command_id){
 	wm_print(window_id, TERMINAL_SYMBOL);
 }
 
-
-char* trim_white_spaces(int window_id, char* input, int input_length){
-	// char* output;
-
-	//Trim leading white space
-	int i = 0;
-	while(input[i] == EMPTY_SPACE && i < input_length){
-		i++;
-		wm_print(window_id, "Trim leading white space: %s\n", input);
-	} 
-
-	//If all the characters is empty space
-	if(*input = 0){
-		wm_print(window_id, "All characters empty space: %s\n", input);
-		return input;
-	}
-
-	//Trim trailing white space
-	// output = input;// + strlen(input) - 1;
-	// int o = input_length;
-	// while((output > input) && (output[o] == EMPTY_SPACE)){
-	// 	output--;	
-	// 	wm_print(window_id, "Trim trailing white space: %s\n", output);
-	// } 
-	// *(output+1) = 0;
-	wm_print(window_id, "Final trimmed output: %s\n", input);
-	return input; 
-}
-
-int str_compare(char* first_string, char* second_string){
-	int index = 0;
-	while(first_string[index] == second_string[index] && first_string[index] != '\0'){
-		index++;
-	}
-	if(first_string[index] != second_string[index]){
-		return 0;
-	}
-	else{
-		return 1;
-	}
-}
-
-int find_command(int window_id, int command_id, char* command, int command_length){
-	// char* command_trimmed = trim_white_spaces(window_id, command, command_length);
-	for(int index = 0; index < 8; index++){
-		char* command_string = shell_commands[index][0];
-		if(str_compare(command, command_string) == 1){
-			execute_shell_commands(window_id, index);
-			return 0;
-		}
-	}
-	execute_shell_commands(window_id, 55);
-}
 
 
 
