@@ -13,10 +13,13 @@
 #define TOTAL_SHELL_COMMANDS 8
 #define MAX_COMMAND_LENGTH 500
 
-#define EMPTY_SPACE ' '
+#define EMPTY_SPACE " "
 #define TERMINAL_SYMBOL ">>"
 #define NEXT_LINE '\n'
-#define TAB_SPACE '\t'
+#define TAB_SPACE "		"
+
+
+int window_id_counter = 0;
 
 struct available_commands{
 	int key;
@@ -32,7 +35,7 @@ struct available_commands command_echo = {COMMAND_ECHO+1, "echo <message>", "Pri
 struct available_commands command_ps = {COMMAND_PS+1, "ps [-d]", "Print a list of TOS processes"};
 struct available_commands command_top = {COMMAND_TOP+1, "top", "Print the Process table every second until interrupted"};
 struct available_commands command_about = {COMMAND_ABOUT+1, "about", "Print your name"};
-struct available_commands command_list = {COMMAND_ALL+1, "list all options", "Lists all available options"};
+// struct available_commands command_list = {COMMAND_ALL+1, "list all options", "Lists all available options"};
 
 
 
@@ -55,11 +58,11 @@ static char* shell_commands[8][2] = {
 							{"echo", "Print a message on the Screen"},
 							{"ps", "Print a list of TOS processes"},
 							{"top", "Print the Process table every second until interrupted"},
-							{"about", "Print your name"},
-							{"list", "Lists all available options"}
+							{"about", "Print your name"}
+							// {"list", "Lists all available options"}
 						};
 
-
+int* window_id_array[MAX_PROCS];
 
 //This method will list all available commands in Shell by providing the window ID and the content to be displayed.
 void view_available_commands(int window_id){
@@ -72,7 +75,7 @@ void view_available_commands(int window_id){
 	wm_print(window_id, "%d. %s 			-		%s\n", command_ps.key, command_ps.command, command_ps.description);
 	wm_print(window_id, "%d. %s 			-		%s\n", command_top.key, command_top.command, command_top.description);
 	wm_print(window_id, "%d. %s 			-		%s\n", command_about.key, command_about.command, command_about.description);
-	wm_print(window_id, "%d. %s 			-		%s\n", command_list.key, command_list.command, command_list.description);
+	// wm_print(window_id, "%d. %s 			-		%s\n", command_list.key, command_list.command, command_list.description);
 	wm_print(window_id, "Please choose an option:\n");
 }
 
@@ -80,29 +83,48 @@ void view_available_commands(int window_id){
 // List of all helper processes
 
 char* trim_white_spaces(int window_id, char* input, int input_length){
-	// char* output;
+	wm_print(window_id, ">>>>>>>>>>>>>Does it come here? Input: %s\n", input);
+	char* output_command;
+	char* command_parameter;
 
 	//Trim leading white space
 	int i = 0;
+	int white_space_count = 0;
 	while(input[i] == EMPTY_SPACE && i < input_length){
+		wm_print(window_id, "Leading white space?\n");
 		i++;
+		white_space_count++;
 		wm_print(window_id, "Trim leading white space: %s\n", input);
 	} 
 
-	//If all the characters is empty space
-	if(*input = 0){
-		wm_print(window_id, "All characters empty space: %s\n", input);
-		return input;
+	//If all of the characters is an empty space
+	// if(*input = 0){
+	if(white_space_count == input_length){
+		wm_print(window_id, "Empty command entered.\n");
+		return '\0';
 	}
 
-	//Trim trailing white space
-	// output = input;// + strlen(input) - 1;
-	// int o = input_length;
-	// while((output > input) && (output[o] == EMPTY_SPACE)){
-	// 	output--;	
-	// 	wm_print(window_id, "Trim trailing white space: %s\n", output);
-	// } 
-	// *(output+1) = 0;
+	//Trim white space between words, find two words in the same command
+	i = 0;
+	for(i = 0; i < input_length; i++){
+		if(input[i] != EMPTY_SPACE){
+			*output_command = input[i];
+			*output_command++;
+			wm_print(window_id, "output_command in each loop: %s\n", output_command);
+		}
+		if(input[i] == EMPTY_SPACE && input[i-1] != EMPTY_SPACE){
+			while(input[i] != EMPTY_SPACE){
+				i++;
+			}
+			while(input[i] != '\0'){
+				*command_parameter = input[i];
+				*command_parameter++;
+				wm_print(window_id, "command_parameter in each loop: %s\n", command_parameter);
+			}
+		}
+	}
+	wm_print(window_id, "Output command: %s\n", output_command);
+	wm_print(window_id, "Command parameter: %s\n", command_parameter);
 	// wm_print(window_id, "Final trimmed output: %s\n", input);
 	return input; 
 }
@@ -121,7 +143,7 @@ int str_compare(char* first_string, char* second_string){
 }
 
 int find_command(int window_id, int command_id, char* command, int command_length){
-	// char* command_trimmed = trim_white_spaces(window_id, command, command_length);
+	char* command_trimmed = trim_white_spaces(window_id, command, command_length);
 	for(int index = 0; index < 8; index++){
 		char* command_string = shell_commands[index][0];
 		if(str_compare(command, command_string) == 1){
@@ -134,13 +156,11 @@ int find_command(int window_id, int command_id, char* command, int command_lengt
 
 
 void shell_print_process_headings(int window_id){
-	wm_print(window_id, "Comes here?\n");
 	wm_print(window_id, "State 				Active	 Priority	Name\n");
 	wm_print(window_id, "-------------------------------------------\n");
 }
 
 void shell_print_process_details(int window_id, PROCESS process){
-	wm_print(window_id, "Prints details?\n");
 	static const char* process_states = 
 						{
 							"READY			",
@@ -161,9 +181,10 @@ void shell_print_process_details(int window_id, PROCESS process){
 		wm_print(window_id, " *			");
 	}
 	else{
-		wm_print(window_id, "			");
-		wm_print(window_id, process->priority);
-		wm_print(window_id, process->name);
+		wm_print(window_id, "			\t");
+		wm_print(window_id, "%s\t",process->priority);
+		wm_print(window_id, "%s,\t",process->name);
+		wm_print(window_id, "\n");
 	}
 }
 
@@ -178,7 +199,6 @@ void call_man(int window_id, int command_id){
 	}
 	else{
 		view_available_commands(window_id);
-		wm_print(window_id, TERMINAL_SYMBOL);
 	}
 }
 
@@ -191,6 +211,7 @@ void clear_screen(int window_id){
 
 void create_new_shell(){
 	// create_process(shell_process, 5, 0, 'Shell Process Created');
+	start_shell();
 }
 
 
@@ -207,7 +228,6 @@ void print_echo_message(int window_id, char* message){
 
 //Calls the ps [-d] command to list all processes on TOS
 void list_processes(int window_id){
-	wm_print(window_id, "Initial method visited?\n");
 	PCB* process = pcb;
 	shell_print_process_headings(window_id);
 	for(int index=0; index < MAX_PROCS; index++){
@@ -220,8 +240,16 @@ void list_processes(int window_id){
 }
 
 
-void print_processes_until_interrupt(){
-
+void print_processes_until_keyboard_interrupt(int window_id){
+	int keyboard_interrupt = 1;
+	while(keyboard_interrupt){
+		list_processes(window_id);
+		if(keyb_get_keystroke(window_id, TRUE)){
+			keyboard_interrupt = 0;
+		}
+	}
+	wm_print(window_id, "There was a keyboard interrupt detected.\n");
+	view_available_commands(window_id);
 }
 
 
@@ -261,16 +289,20 @@ void execute_shell_commands(int window_id, int command_id){
 		break;
 
 		case COMMAND_TOP:
-			print_processes_until_interrupt();
+			print_processes_until_keyboard_interrupt(window_id);
 		break;
 
 		case COMMAND_ABOUT:
 			print_about(window_id);
 		break;
 
-		case COMMAND_ALL:
-			list_options(window_id);
-		break;
+		// case COMMAND_ALL:
+		// 	list_options(window_id);
+		// break;
+
+		// case COMMAND_ERROR:
+		// 	wm_print(window_id, "Sorry, command not found. Please try another command.\n");
+		// break;
 
 		default:
 			wm_print(window_id, "Sorry, command not found. Please try another command.\n");
@@ -283,7 +315,15 @@ void execute_shell_commands(int window_id, int command_id){
 
 
 void shell_process(PROCESS process, PARAM param){
-	int window_id = wm_create(5, 2, 60, 18);
+	int window_id = wm_create(5, 2, 70, 20);
+	window_id_array[window_id_counter] = window_id;
+	window_id_counter++;
+	wm_print(window_id, "Current window ID: %d\n", window_id);
+	wm_print(window_id, "***************************************\n");
+	// for(int i = 0;i<MAX_PROCS;i++){
+	// 	wm_print(window_id, "%d\t", window_id_array[i]);
+	// }
+	// wm_print(window_id, "\n***************************************\n");
 	wm_print(window_id, TERMINAL_SYMBOL);
 	view_available_commands(window_id);
 	wm_print(window_id, TERMINAL_SYMBOL);
@@ -295,16 +335,20 @@ void shell_process(PROCESS process, PARAM param){
 		int command_id = key - '0';
 
 		if(key == EMPTY_SPACE){
+			command[command_index] = key;
+			command_index++;
 			wm_print(window_id, EMPTY_SPACE);
 		}
 		else if(key == NEXT_LINE || key == 13){
-			wm_print(window_id, "\n");
+			// wm_print(window_id, "\n");
 			find_command(window_id, command_id, command, command_index);
 			command = malloc(MAX_COMMAND_LENGTH);
 			command_index = 0;
 		}
 		else if(key == TAB_SPACE){
-			wm_print(window_id, "\t");
+			command[command_index] = key;
+			command_index++;
+			wm_print(window_id, TAB_SPACE);
 		}
 		else{
 			wm_print(window_id, "%c", key);
