@@ -13,10 +13,12 @@
 #define TOTAL_SHELL_COMMANDS 8
 #define MAX_COMMAND_LENGTH 500
 
-#define EMPTY_SPACE " "
+#define EMPTY_SPACE_STRING " "
+#define EMPTY_SPACE_CHAR ' '
 #define TERMINAL_SYMBOL ">>"
-#define NEXT_LINE '\n'
-#define TAB_SPACE "		"
+#define NEXT_LINE 13
+#define TAB_SPACE 17
+#define BACKSPACE 8
 
 
 int window_id_counter = 0;
@@ -100,27 +102,32 @@ struct command_components trim_white_spaces(int window_id, char* input, int inpu
 
 	//Trim white space between words, find two words in the same command
 	for(i = 0; i < input_length; i++){
-		if(input[i] != ' ' && input[i-1] == ' ' && output_command_index != 0){
+		if(input[i] != EMPTY_SPACE_CHAR && input[i-1] == EMPTY_SPACE_CHAR && output_command_index != 0){
 			command_parameter[command_parameter_index] = input[i];
 			command_parameter_index++;
 		}
-		else if(input[i] == ' '){
+		else if(input[i] == EMPTY_SPACE_CHAR){
 			white_space_count++;
-			wm_print(window_id, "Character at position %d is empty.\n", i);
+			// wm_print(window_id, "Character at position %d is empty.\n", i);
 			continue;
 		}
 		else{
 			if(command_parameter_index != 0){
-				wm_print(window_id, "The first command parameter has started.\n");
-				command_parameter[command_parameter_index] = input[i];
-				command_parameter_index++;
-				wm_print(window_id, "Command parameter until now: %s\n", command_parameter);
+				// wm_print(window_id, "The first command parameter has started.\n");
+				int j = i;
+				while(input[j] != '\0'){
+					command_parameter[command_parameter_index] = input[j];
+					j++;
+					command_parameter_index++;
+				}		
+				// wm_print(window_id, "Command parameter until now: %s\n", command_parameter);
+				break;
 			}
 			else{
 				output_command[output_command_index] = input[i];
-				wm_print(window_id, "output_command in each loop: %s\n", output_command);
+				// wm_print(window_id, "output_command in each loop: %s\n", output_command);
 				output_command_index++;
-				wm_print(window_id, "input[i] in each loop: %c\n", input[i]);
+				// wm_print(window_id, "input[i] in each loop: %c\n", input[i]);
 			}	
 		}
 
@@ -130,9 +137,8 @@ struct command_components trim_white_spaces(int window_id, char* input, int inpu
 		}	
 	}
 	struct command_components command_final1 = {output_command, command_parameter};
-	wm_print(window_id, "Output command: %s\n", output_command);
-	wm_print(window_id, "Command parameter: %s\n", command_parameter);
-	// wm_print(window_id, "Final trimmed output: %s\n", input);
+	// wm_print(window_id, "Output command: %s\n", output_command);
+	// wm_print(window_id, "Command parameter: %s\n", command_parameter);
 	return command_final1; 
 }
 
@@ -163,8 +169,8 @@ int find_command(int window_id, int command_id, char* command, int command_lengt
 
 
 void shell_print_process_headings(int window_id){
-	wm_print(window_id, "State                Active  Priority    Name\n");
-	wm_print(window_id, "---------------------------------------------------\n");
+	wm_print(window_id, "State                Active  Priority       Name\n");
+	wm_print(window_id, "-----------------------------------------------------\n");
 }
 
 void shell_print_process_details(int window_id, PROCESS process){
@@ -229,7 +235,7 @@ void launch_pong(){
 
 
 void print_echo_message(int window_id, char* message){
-	wm_print(window_id, message);
+	wm_print(window_id, "%s\n", message);
 }
 
 
@@ -303,14 +309,6 @@ void execute_shell_commands(int window_id, int command_id, char* command_paramet
 			print_about(window_id);
 		break;
 
-		// case COMMAND_ALL:
-		// 	list_options(window_id);
-		// break;
-
-		// case COMMAND_ERROR:
-		// 	wm_print(window_id, "Sorry, command not found. Please try another command.\n");
-		// break;
-
 		default:
 			wm_print(window_id, "Sorry, command not found. Please try another command.\n");
 		break;
@@ -341,12 +339,16 @@ void shell_process(PROCESS process, PARAM param){
 		char key = keyb_get_keystroke(window_id, TRUE);
 		int command_id = key - '0';
 
-		if(key == EMPTY_SPACE){
+		if(key == BACKSPACE){
+			
+		}
+
+		if(key == EMPTY_SPACE_STRING){
 			command[command_index] = key;
 			command_index++;
-			wm_print(window_id, EMPTY_SPACE);
+			wm_print(window_id, EMPTY_SPACE_STRING);
 		}
-		else if(key == NEXT_LINE || key == 13){
+		else if(key == NEXT_LINE){
 			wm_print(window_id, "\n");
 			find_command(window_id, command_id, command, command_index);
 			command = malloc(MAX_COMMAND_LENGTH);
@@ -355,7 +357,7 @@ void shell_process(PROCESS process, PARAM param){
 		else if(key == TAB_SPACE){
 			command[command_index] = key;
 			command_index++;
-			wm_print(window_id, TAB_SPACE);
+			wm_print(window_id, "\t");
 		}
 		else{
 			wm_print(window_id, "%c", key);
