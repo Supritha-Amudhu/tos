@@ -334,36 +334,54 @@ void shell_process(PROCESS process, PARAM param){
 	wm_print(window_id, TERMINAL_SYMBOL);
 	char* command = malloc(MAX_COMMAND_LENGTH);
 	int command_index = 0;
+	int backspace_count = 0;
 
 	while(1){
 		char key = keyb_get_keystroke(window_id, TRUE);
 		int command_id = key - '0';
-
 		if(key == BACKSPACE){
-			
+			wm_print(window_id, "Does it come here?\n");
+			if(backspace_count == 0){
+				wm_print(window_id, "Count zero?\n");
+				continue;
+			}
+			else{
+				wm_print(window_id, "Count is not zero?\n");
+				wm_print(window_id, "\b");
+				backspace_count--;
+				command_index--;
+				command[command_index] = '\0';
+				wm_print(window_id, "Reducing Backspace Count: %d\n", backspace_count);
+				continue;
+			}
 		}
-
-		if(key == EMPTY_SPACE_STRING){
+		if(key == EMPTY_SPACE_CHAR){
 			command[command_index] = key;
 			command_index++;
+			backspace_count++;
 			wm_print(window_id, EMPTY_SPACE_STRING);
 		}
 		else if(key == NEXT_LINE){
 			wm_print(window_id, "\n");
+			wm_print(window_id, "The command: %s\n", command);
 			find_command(window_id, command_id, command, command_index);
 			command = malloc(MAX_COMMAND_LENGTH);
 			command_index = 0;
+			backspace_count = 0;
 		}
 		else if(key == TAB_SPACE){
 			command[command_index] = key;
 			command_index++;
+			backspace_count++;
 			wm_print(window_id, "\t");
 		}
 		else{
 			wm_print(window_id, "%c", key);
 			command[command_index] = key;
 			command_index++;
+			backspace_count++;
 		}
+		wm_print(window_id, " Backspace Count: %d\n", backspace_count);
 	}
 }
 
