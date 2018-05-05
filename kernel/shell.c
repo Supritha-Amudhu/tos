@@ -42,7 +42,6 @@ struct available_commands command_echo = {COMMAND_ECHO+1, "echo <message>", "Pri
 struct available_commands command_ps = {COMMAND_PS+1, "ps [-d]", "Print a list of TOS processes"};
 struct available_commands command_top = {COMMAND_TOP+1, "top", "Print the Process table every second until interrupted"};
 struct available_commands command_about = {COMMAND_ABOUT+1, "about", "Print your name"};
-// struct available_commands command_list = {COMMAND_ALL+1, "list all options", "Lists all available options"};
 
 
 
@@ -167,6 +166,22 @@ int find_command(int window_id, int command_id, char* command, int command_lengt
 	execute_shell_commands(window_id, 55);
 }
 
+char* remove_quotes_echo(char* input){
+	int index = 0;
+	char* echo_output = malloc(MAX_COMMAND_LENGTH);
+	int echo_output_index = 0;
+	while(input[index] != '\0'){
+		if(input[index] == '"' || input[index] == '\''){
+			index++;
+			continue;
+		}
+		echo_output[echo_output_index] = input[index];
+		index++;
+		echo_output_index++;
+	}
+	return echo_output;
+}
+
 
 void shell_print_process_headings(int window_id){
 	wm_print(window_id, "State                Active  Priority       Name\n");
@@ -202,7 +217,6 @@ void shell_print_process_details(int window_id, PROCESS process){
 }
 
 
-
 // Main shell commands
 
 void call_man(int window_id, int command_id, char* command_parameter){
@@ -235,7 +249,7 @@ void launch_pong(){
 
 
 void print_echo_message(int window_id, char* message){
-	wm_print(window_id, "%s\n", message);
+	wm_print(window_id, "%s\n", remove_quotes_echo(message));
 }
 
 
@@ -325,63 +339,106 @@ void shell_process(PROCESS process, PARAM param){
 	window_id_counter++;
 	wm_print(window_id, "Current window ID: %d\n", window_id);
 	wm_print(window_id, "***************************************\n");
-	// for(int i = 0;i<MAX_PROCS;i++){
-	// 	wm_print(window_id, "%d\t", window_id_array[i]);
-	// }
-	// wm_print(window_id, "\n***************************************\n");
-	wm_print(window_id, TERMINAL_SYMBOL);
 	view_available_commands(window_id);
 	wm_print(window_id, TERMINAL_SYMBOL);
 	char* command = malloc(MAX_COMMAND_LENGTH);
 	int command_index = 0;
-	int backspace_count = 0;
+	// int backspace_count = 0;
 
 	while(1){
 		char key = keyb_get_keystroke(window_id, TRUE);
+		// wm_print(window_id, "Key: %c", key);
 		int command_id = key - '0';
-		if(key == BACKSPACE){
-			wm_print(window_id, "Does it come here?\n");
-			if(backspace_count == 0){
-				wm_print(window_id, "Count zero?\n");
-				continue;
-			}
-			else{
-				wm_print(window_id, "Count is not zero?\n");
-				wm_print(window_id, "\b");
-				backspace_count--;
-				command_index--;
-				command[command_index] = '\0';
-				wm_print(window_id, "Reducing Backspace Count: %d\n", backspace_count);
-				continue;
-			}
-		}
-		if(key == EMPTY_SPACE_CHAR){
-			command[command_index] = key;
-			command_index++;
-			backspace_count++;
-			wm_print(window_id, EMPTY_SPACE_STRING);
-		}
-		else if(key == NEXT_LINE){
-			wm_print(window_id, "\n");
-			wm_print(window_id, "The command: %s\n", command);
-			find_command(window_id, command_id, command, command_index);
-			command = malloc(MAX_COMMAND_LENGTH);
-			command_index = 0;
-			backspace_count = 0;
-		}
-		else if(key == TAB_SPACE){
-			command[command_index] = key;
-			command_index++;
-			backspace_count++;
-			wm_print(window_id, "\t");
-		}
-		else{
-			wm_print(window_id, "%c", key);
-			command[command_index] = key;
-			command_index++;
-			backspace_count++;
-		}
-		wm_print(window_id, " Backspace Count: %d\n", backspace_count);
+		switch(key){
+			case BACKSPACE:
+				if(command_index == 0){
+					// wm_print(window_id, "Count zero?\n");
+					continue;
+				}
+				else{
+					// wm_print(window_id, "Count is not zero?\n");
+					wm_print(window_id, "\b");
+					// backspace_count--;
+					command_index--;
+					command[command_index] = '\0';
+					// wm_print(window_id, "Reducing Backspace Count: %d\n", backspace_count);
+					continue;
+				}
+			break;
+
+			case EMPTY_SPACE_CHAR:
+				command[command_index] = key;
+				command_index++;
+				// backspace_count++;
+				wm_print(window_id, EMPTY_SPACE_STRING);
+			break;
+
+			case NEXT_LINE:
+				wm_print(window_id, "\n");
+				wm_print(window_id, "The command: %s\n", command);
+				find_command(window_id, command_id, command, command_index);
+				command = malloc(MAX_COMMAND_LENGTH);
+				command_index = 0;
+				// backspace_count = 0;
+			break;
+
+			case TAB_SPACE:
+				command[command_index] = key;
+				command_index++;
+				// backspace_count++;
+				wm_print(window_id, "\t");
+			break;
+
+			default:
+				wm_print(window_id, "%c", key);
+				command[command_index] = key;
+				command_index++;
+				// backspace_count++;
+			break;
+		};
+		// if(key == BACKSPACE){
+		// 	// wm_print(window_id, "Does it come here?\n");
+		// 	if(command_index == 0){
+		// 		// wm_print(window_id, "Count zero?\n");
+		// 		continue;
+		// 	}
+		// 	else{
+		// 		// wm_print(window_id, "Count is not zero?\n");
+		// 		wm_print(window_id, "\b");
+		// 		// backspace_count--;
+		// 		command_index--;
+		// 		command[command_index] = '\0';
+		// 		// wm_print(window_id, "Reducing Backspace Count: %d\n", backspace_count);
+		// 		continue;
+		// 	}
+		// }
+		// if(key == EMPTY_SPACE_CHAR){
+		// 	command[command_index] = key;
+		// 	command_index++;
+		// 	// backspace_count++;
+		// 	wm_print(window_id, EMPTY_SPACE_STRING);
+		// }
+		// else if(key == NEXT_LINE){
+		// 	wm_print(window_id, "\n");
+		// 	wm_print(window_id, "The command: %s\n", command);
+		// 	find_command(window_id, command_id, command, command_index);
+		// 	command = malloc(MAX_COMMAND_LENGTH);
+		// 	command_index = 0;
+		// 	// backspace_count = 0;
+		// }
+		// else if(key == TAB_SPACE){
+		// 	command[command_index] = key;
+		// 	command_index++;
+		// 	// backspace_count++;
+		// 	wm_print(window_id, "\t");
+		// }
+		// else{
+		// 	wm_print(window_id, "%c", key);
+		// 	command[command_index] = key;
+		// 	command_index++;
+		// 	// backspace_count++;
+		// }
+		// wm_print(window_id, " Backspace Count: %d\n", backspace_count);
 	}
 }
 
