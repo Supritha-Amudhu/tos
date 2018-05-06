@@ -239,33 +239,38 @@ void print_echo_message(int window_id, char* message){
 void list_processes(int window_id, char* command_parameter){
 	PCB *process = pcb;
 	int print_all_details = 0;
+
 	if(str_compare(command_parameter, "-d")){
 		print_all_details = 1;
+	}
+	else if(str_compare(command_parameter, "None")){
+		print_all_details = 0;
 	}
 	else{
 		wm_print(window_id, "Sorry, command not found. Please try another command.\n");
 		return;
 	}
-	// int print_all_details = str_compare(command_parameter, "-d");
-    shell_print_process_headings(window_id, print_all_details);
+
+	shell_print_process_headings(window_id, print_all_details);
     for (int i = 0; i < MAX_PROCS; i++, process++) {
         if (!process->used)
             continue;
         shell_print_process_details(window_id, process, print_all_details);
-    }	
+    }
+    
 }
 
 
 void print_processes_until_keyboard_interrupt(int window_id){
 	int keyboard_interrupt = 1;
 	while(keyboard_interrupt){
-		list_processes(window_id, "");
+		list_processes(window_id, "-d");
 		if(keyb_get_keystroke(window_id, TRUE)){
 			keyboard_interrupt = 0;
 		}
 	}
 	wm_print(window_id, "There was a keyboard interrupt detected.\n");
-	view_available_commands(window_id);
+	// view_available_commands(window_id);
 }
 
 
