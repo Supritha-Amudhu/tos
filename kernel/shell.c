@@ -1,6 +1,5 @@
 #include <kernel.h>
 
-#define COMMAND_ALL 8
 #define COMMAND_MAN 0
 #define COMMAND_CLEAR 1
 #define COMMAND_SHELL 2
@@ -23,73 +22,41 @@
 
 int window_id_counter = 0;
 
-struct available_commands{
-	int key;
-	char* command;
-	char* description;
-};
-
 struct command_components{
 	char* command;
 	char* parameter;
 };
 
-struct available_commands command_man = {COMMAND_MAN+1, "man [command]", "Print a short description for a command or list all commands"};
-struct available_commands command_clear = {COMMAND_CLEAR+1, "clear", "Clear the current window"};
-struct available_commands command_shell = {COMMAND_SHELL+1, "shell", "Launch a new Shell"};
-struct available_commands command_pong = {COMMAND_PONG+1, "pong", "Launch a Ping Pong game"};
-struct available_commands command_echo = {COMMAND_ECHO+1, "echo <message>", "Print a message on the Screen"};
-struct available_commands command_ps = {COMMAND_PS+1, "ps [-d]", "Print a list of TOS processes"};
-struct available_commands command_top = {COMMAND_TOP+1, "top", "Print the Process table every second until interrupted"};
-struct available_commands command_about = {COMMAND_ABOUT+1, "about", "Print your name"};
-
-
-
-// static char* shell_commands[] = {
-// 							command_man.command,
-// 							command_clear.command,
-// 							command_shell.command,
-// 							command_pong.command,
-// 							command_echo.command,
-// 							command_ps.command,
-// 							command_top.command,
-// 							command_about.command
-// 						};
-
-static char* shell_commands[8][2] = {
-							{"man", "Print a short description for a command or list all commands"},
+static char* shell_commands[8][3] = {
+							{"man", "Print a short description for a command                          or list all commands"},
 							{"clear", "Clear the current window"},
 							{"shell", "Launch a new Shell"},
 							{"pong", "Launch a Ping Pong game"},
 							{"echo", "Print a message on the Screen"},
 							{"ps", "Print a list of TOS processes"},
-							{"top", "Print the Process table every second until interrupted"},
+							{"top", "Print the Process table every second unt                         il interrupted"},
 							{"about", "Print your name"}
-							// {"list", "Lists all available options"}
 						};
 
 int* window_id_array[MAX_PROCS];
 
 //This method will list all available commands in Shell by providing the window ID and the content to be displayed.
 void view_available_commands(int window_id){
-	// wm_print(window_id, "These are the cool Shell operations that you can perform! Try them :)\n");
-	wm_print(window_id, "%d. %s 			-		%s\n", command_man.key, command_man.command, command_man.description);
-	wm_print(window_id, "%d. %s 			-		%s\n", command_clear.key, command_clear.command, command_clear.description);
-	wm_print(window_id, "%d. %s 			-		%s\n", command_shell.key, command_shell.command, command_shell.description);
-	wm_print(window_id, "%d. %s 			-		%s\n", command_pong.key, command_pong.command, command_pong.description);
-	wm_print(window_id, "%d. %s 			-		%s\n", command_echo.key, command_echo.command, command_echo.description);
-	wm_print(window_id, "%d. %s 			-		%s\n", command_ps.key, command_ps.command, command_ps.description);
-	wm_print(window_id, "%d. %s 			-		%s\n", command_top.key, command_top.command, command_top.description);
-	wm_print(window_id, "%d. %s 			-		%s\n", command_about.key, command_about.command, command_about.description);
-	// wm_print(window_id, "%d. %s 			-		%s\n", command_list.key, command_list.command, command_list.description);
-	wm_print(window_id, "Please choose an option:\n");
+	wm_print(window_id, "1. man <command> -       %s\n", shell_commands[0][1]);
+	wm_print(window_id, "2. clear         -       %s\n", shell_commands[1][1]);
+	wm_print(window_id, "3. shell         -       %s\n", shell_commands[2][1]);
+	wm_print(window_id, "4. pong          -       %s\n", shell_commands[3][1]);
+	wm_print(window_id, "5. echo          -       %s\n", shell_commands[4][1]);
+	wm_print(window_id, "6. ps <-d>       -       %s\n", shell_commands[5][1]);
+	wm_print(window_id, "7. top           -       %s\n", shell_commands[6][1]);
+	wm_print(window_id, "8. about         -       %s\n", shell_commands[7][1]);
+	wm_print(window_id, "\nPlease choose an option:\n\n");
 }
 
 
 // List of all helper processes
 
 struct command_components trim_white_spaces(int window_id, char* input, int input_length){
-	struct command_components command_final;
 	char* output_command = malloc(MAX_COMMAND_LENGTH);
 	char* command_parameter = malloc(MAX_COMMAND_LENGTH);
 	int output_command_index = 0;
@@ -107,38 +74,35 @@ struct command_components trim_white_spaces(int window_id, char* input, int inpu
 		}
 		else if(input[i] == EMPTY_SPACE_CHAR){
 			white_space_count++;
-			// wm_print(window_id, "Character at position %d is empty.\n", i);
 			continue;
 		}
 		else{
 			if(command_parameter_index != 0){
-				// wm_print(window_id, "The first command parameter has started.\n");
 				int j = i;
 				while(input[j] != '\0'){
 					command_parameter[command_parameter_index] = input[j];
 					j++;
 					command_parameter_index++;
 				}		
-				// wm_print(window_id, "Command parameter until now: %s\n", command_parameter);
 				break;
 			}
 			else{
 				output_command[output_command_index] = input[i];
-				// wm_print(window_id, "output_command in each loop: %s\n", output_command);
 				output_command_index++;
-				// wm_print(window_id, "input[i] in each loop: %c\n", input[i]);
 			}	
 		}
 
 		if(white_space_count >= input_length){
 			wm_print(window_id, "Empty command entered.\n");
+			struct command_components command_final = {"None", "None"};
 			return command_final;
 		}	
 	}
-	struct command_components command_final1 = {output_command, command_parameter};
-	// wm_print(window_id, "Output command: %s\n", output_command);
-	// wm_print(window_id, "Command parameter: %s\n", command_parameter);
-	return command_final1; 
+	if(command_parameter_index == 0){
+		command_parameter = "None";
+	}
+	struct command_components command_final = {output_command, command_parameter};
+	return command_final; 
 }
 
 int str_compare(char* first_string, char* second_string){
@@ -154,9 +118,9 @@ int str_compare(char* first_string, char* second_string){
 	}
 }
 
-int find_command(int window_id, int command_id, char* command, int command_length){
+int find_command(int window_id, char* command, int command_length){
 	struct command_components command_final = trim_white_spaces(window_id, command, command_length);
-	for(int index = 0; index < 8; index++){
+	for(int index = 0; index < TOTAL_SHELL_COMMANDS; index++){
 		char* command_from_list = shell_commands[index][0];
 		if(str_compare(command_final.command, command_from_list) == 1){
 			execute_shell_commands(window_id, index, command_final.parameter);
@@ -183,52 +147,71 @@ char* remove_quotes_echo(char* input){
 }
 
 
-void shell_print_process_headings(int window_id){
-	wm_print(window_id, "State                Active  Priority       Name\n");
-	wm_print(window_id, "-----------------------------------------------------\n");
-}
-
-void shell_print_process_details(int window_id, PROCESS process){
-	static const char* process_states[] = 
-						{
-							"READY          ",
-							"ZOMBIE         ",
-							"SEND_BLOCKED   ",
-							"REPLY_BLOCKED  ",
-							"RECEIVE_BLOCKED",
-							"MESSAGE_BLOCKED",
-							"INTR_BLOCKED   "
-						};
-	if(!process->used){
-		wm_print(window_id, "PCB slot unused.\n");
-		return;
-	}
-	wm_print(window_id, "%s  ", process_states[process->state]);
-	//Check for active proc, if active print *, if not print an empty space and the rest of the details
-	if(process == active_proc){
-		wm_print(window_id, " *           ");
+void shell_print_process_headings(int window_id, int print_all_details){
+	if(print_all_details){
+		wm_print(window_id, "State              Active  Priority       Name\n");
+		wm_print(window_id, "-----------------------------------------------------\n");
 	}
 	else{
-		wm_print(window_id, "             ");
-		wm_print(window_id, "  %d    ",process->priority);
-		wm_print(window_id, "   %s    ",process->name);
-		wm_print(window_id, "\n");
+		wm_print(window_id, "Name\n");
+		wm_print(window_id, "----\n");
+	}
+}
+
+void shell_print_process_details(int window_id, PROCESS process, int print_all_details){
+	static const char* process_states[] = 
+						{
+							"READY           ",
+							"ZOMBIE          ",
+							"SEND_BLOCKED    ",
+							"REPLY_BLOCKED   ",
+							"RECEIVE_BLOCKED ",
+							"MESSAGE_BLOCKED ",
+							"INTR_BLOCKED    "
+						};
+	if(!process->used){
+		wm_print(window_id, "PCB slot unused.");
+		return;
+	}
+	if(print_all_details){
+		wm_print(window_id, "%s  ", process_states[process->state]);
+		//Check for active proc, if active print *, if not print an empty space and the rest of the details
+		if(process == active_proc){
+			wm_print(window_id, "   *         ");
+		}
+		else{
+			wm_print(window_id, "             ");
+		}
+		wm_print(window_id, "   %d    ",process->priority);
+		wm_print(window_id, "   %s    \n",process->name);
+	}
+	else{
+		wm_print(window_id, "%s\n",process->name);
 	}
 }
 
 
 // Main shell commands
 
-void call_man(int window_id, int command_id, char* command_parameter){
+void call_man(int window_id, char* command_parameter){
 	char* command_name = '\0';
-	if(command_name){
-		wm_print(window_id, shell_commands[command_id][1]);
+	int command_match_found = 0;
+	if(command_parameter != "None"){
+		for(int i = 0; i < TOTAL_SHELL_COMMANDS; i++){
+			if(str_compare(command_parameter, shell_commands[i][0])){
+				wm_print(window_id, "%s\n", shell_commands[i][1]);
+				command_match_found = 1;
+			}
+		}
+		if(!command_match_found){
+			wm_print(window_id, "Sorry, command not found. Please try another command.\n");
+			return;
+		}
 	}
 	else{
 		view_available_commands(window_id);
 	}
 }
-
 
 //Invokes the clear_wm() method which clears the window contents when a window ID is specified.
 void clear_screen(int window_id){
@@ -237,7 +220,6 @@ void clear_screen(int window_id){
 
 
 void create_new_shell(){
-	// create_process(shell_process, 5, 0, 'Shell Process Created');
 	start_shell();
 }
 
@@ -255,15 +237,22 @@ void print_echo_message(int window_id, char* message){
 
 //Calls the ps [-d] command to list all processes on TOS
 void list_processes(int window_id, char* command_parameter){
-	PCB* process = pcb;
-	shell_print_process_headings(window_id);
-	for(int index=0; index < MAX_PROCS; index++){
-		if(!process->used){
-			continue;
-		}
-		shell_print_process_details(window_id, process);	
+	PCB *process = pcb;
+	int print_all_details = 0;
+	if(str_compare(command_parameter, "-d")){
+		print_all_details = 1;
 	}
-	
+	else{
+		wm_print(window_id, "Sorry, command not found. Please try another command.\n");
+		return;
+	}
+	// int print_all_details = str_compare(command_parameter, "-d");
+    shell_print_process_headings(window_id, print_all_details);
+    for (int i = 0; i < MAX_PROCS; i++, process++) {
+        if (!process->used)
+            continue;
+        shell_print_process_details(window_id, process, print_all_details);
+    }	
 }
 
 
@@ -284,15 +273,11 @@ void print_about(int window_id){
 	wm_print(window_id, "Hey there! I am Supritha Amudhu, a passionate programmer and a bibliophile. :)\n");
 }
 
-void list_options(int window_id){
-	view_available_commands(window_id);
-}
 
-
-void execute_shell_commands(int window_id, int command_id, char* command_parameter){
-	switch(command_id){
+void execute_shell_commands(int window_id, int command_index, char* command_parameter){
+	switch(command_index){
 		case COMMAND_MAN:
-			call_man(window_id, command_id, command_parameter);
+			call_man(window_id, command_parameter);
 		break;
 
 		case COMMAND_CLEAR:
@@ -327,41 +312,32 @@ void execute_shell_commands(int window_id, int command_id, char* command_paramet
 			wm_print(window_id, "Sorry, command not found. Please try another command.\n");
 		break;
 	};
-	wm_print(window_id, TERMINAL_SYMBOL);
+	wm_print(window_id, "\n%s", TERMINAL_SYMBOL);
 }
 
 
 
 
 void shell_process(PROCESS process, PARAM param){
-	int window_id = wm_create(1, 1, 60, 18);
+	int window_id = wm_create(1, 1, 65, 22);
 	window_id_array[window_id_counter] = window_id;
 	window_id_counter++;
-	wm_print(window_id, "Current window ID: %d\n", window_id);
-	wm_print(window_id, "***************************************\n");
 	view_available_commands(window_id);
-	wm_print(window_id, TERMINAL_SYMBOL);
+	wm_print(window_id, "\n%s", TERMINAL_SYMBOL);
 	char* command = malloc(MAX_COMMAND_LENGTH);
 	int command_index = 0;
-	// int backspace_count = 0;
 
 	while(1){
 		char key = keyb_get_keystroke(window_id, TRUE);
-		// wm_print(window_id, "Key: %c", key);
-		int command_id = key - '0';
 		switch(key){
 			case BACKSPACE:
 				if(command_index == 0){
-					// wm_print(window_id, "Count zero?\n");
 					continue;
 				}
 				else{
-					// wm_print(window_id, "Count is not zero?\n");
 					wm_print(window_id, "\b");
-					// backspace_count--;
 					command_index--;
 					command[command_index] = '\0';
-					// wm_print(window_id, "Reducing Backspace Count: %d\n", backspace_count);
 					continue;
 				}
 			break;
@@ -369,23 +345,20 @@ void shell_process(PROCESS process, PARAM param){
 			case EMPTY_SPACE_CHAR:
 				command[command_index] = key;
 				command_index++;
-				// backspace_count++;
 				wm_print(window_id, EMPTY_SPACE_STRING);
 			break;
 
 			case NEXT_LINE:
 				wm_print(window_id, "\n");
 				wm_print(window_id, "The command: %s\n", command);
-				find_command(window_id, command_id, command, command_index);
+				find_command(window_id, command, command_index);
 				command = malloc(MAX_COMMAND_LENGTH);
 				command_index = 0;
-				// backspace_count = 0;
 			break;
 
 			case TAB_SPACE:
 				command[command_index] = key;
 				command_index++;
-				// backspace_count++;
 				wm_print(window_id, "\t");
 			break;
 
@@ -393,52 +366,8 @@ void shell_process(PROCESS process, PARAM param){
 				wm_print(window_id, "%c", key);
 				command[command_index] = key;
 				command_index++;
-				// backspace_count++;
 			break;
 		};
-		// if(key == BACKSPACE){
-		// 	// wm_print(window_id, "Does it come here?\n");
-		// 	if(command_index == 0){
-		// 		// wm_print(window_id, "Count zero?\n");
-		// 		continue;
-		// 	}
-		// 	else{
-		// 		// wm_print(window_id, "Count is not zero?\n");
-		// 		wm_print(window_id, "\b");
-		// 		// backspace_count--;
-		// 		command_index--;
-		// 		command[command_index] = '\0';
-		// 		// wm_print(window_id, "Reducing Backspace Count: %d\n", backspace_count);
-		// 		continue;
-		// 	}
-		// }
-		// if(key == EMPTY_SPACE_CHAR){
-		// 	command[command_index] = key;
-		// 	command_index++;
-		// 	// backspace_count++;
-		// 	wm_print(window_id, EMPTY_SPACE_STRING);
-		// }
-		// else if(key == NEXT_LINE){
-		// 	wm_print(window_id, "\n");
-		// 	wm_print(window_id, "The command: %s\n", command);
-		// 	find_command(window_id, command_id, command, command_index);
-		// 	command = malloc(MAX_COMMAND_LENGTH);
-		// 	command_index = 0;
-		// 	// backspace_count = 0;
-		// }
-		// else if(key == TAB_SPACE){
-		// 	command[command_index] = key;
-		// 	command_index++;
-		// 	// backspace_count++;
-		// 	wm_print(window_id, "\t");
-		// }
-		// else{
-		// 	wm_print(window_id, "%c", key);
-		// 	command[command_index] = key;
-		// 	command_index++;
-		// 	// backspace_count++;
-		// }
-		// wm_print(window_id, " Backspace Count: %d\n", backspace_count);
 	}
 }
 
@@ -446,6 +375,6 @@ void shell_process(PROCESS process, PARAM param){
 // Start the Shell process and resign kernel
 void start_shell()
 {
-	create_process(shell_process, 5, 0, 'Shell Process Created');
+	create_process(shell_process, 5, 0, "Shell Process");
 	resign();
 }
