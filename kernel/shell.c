@@ -61,39 +61,34 @@ struct command_components trim_white_spaces(int window_id, char* input, int inpu
 	char* command_parameter = malloc(MAX_COMMAND_LENGTH);
 	int output_command_index = 0;
 	int command_parameter_index = 0;
-
-	int i = 0;
+	int index = 0;
 	int white_space_count = 0;
 	
 
 	//Trim white space between words, find two words in the same command
-	for(i = 0; i < input_length; i++){
-		if(input[i] != EMPTY_SPACE_CHAR && input[i-1] == EMPTY_SPACE_CHAR && output_command_index != 0){
-			command_parameter[command_parameter_index] = input[i];
-			command_parameter_index++;
+	for(int index = 0; index < input_length; index++){
+		//When output_command_index is not 0, the command parameter string has started, return the remaining string as parameter
+		if(input[index] != EMPTY_SPACE_CHAR && input[index-1] == EMPTY_SPACE_CHAR && output_command_index != 0){
+			int inner_loop_index = index;
+			while(input[inner_loop_index] != '\0'){
+				command_parameter[command_parameter_index] = input[inner_loop_index];
+				inner_loop_index++;
+				command_parameter_index++;
+			}		
+			break;
 		}
-		else if(input[i] == EMPTY_SPACE_CHAR){
+		//Checks if the current character is a white space, if so, skips it.
+		else if(input[index] == EMPTY_SPACE_CHAR){
 			white_space_count++;
 			continue;
 		}
+		//If neither of these cases, add the character to output_command
 		else{
-			if(command_parameter_index != 0){
-				int j = i;
-				while(input[j] != '\0'){
-					command_parameter[command_parameter_index] = input[j];
-					j++;
-					command_parameter_index++;
-				}		
-				break;
-			}
-			else{
-				output_command[output_command_index] = input[i];
-				output_command_index++;
-			}	
-		}
-
+			output_command[output_command_index] = input[index];
+			output_command_index++;
+		}	
+		//Checks if the command contains only white spaces
 		if(white_space_count >= input_length){
-			wm_print(window_id, "Empty command entered.\n");
 			struct command_components command_final = {"None", "None"};
 			return command_final;
 		}	
@@ -105,6 +100,30 @@ struct command_components trim_white_spaces(int window_id, char* input, int inpu
 	return command_final; 
 }
 
+//Trim trailing white spaces in a string. If the string has two words, return the input string
+char* trim_trailing_white_spaces(char* input){
+	int index = 0;
+	int string_index = 0;
+	char* trimmed_string = malloc(MAX_COMMAND_LENGTH);
+
+	//If there are two words detected, then return the entire input string as parameter
+	while(input[index] != '\0'){
+		if(input[index] != EMPTY_SPACE_CHAR && input[index-1] == EMPTY_SPACE_CHAR){
+			return input;
+		}
+		//Skip if it an empty space - Here it is trailing space
+		if(input[index] == EMPTY_SPACE_CHAR){	
+			index++;
+			continue;
+		}
+		trimmed_string[string_index] = input[index];
+		index++;
+		string_index++;
+	}
+	return trimmed_string;
+}
+
+//Compare two strings and return if they are equal or not
 int str_compare(char* first_string, char* second_string){
 	int index = 0;
 	while(first_string[index] == second_string[index] && first_string[index] != '\0'){
@@ -198,7 +217,7 @@ void call_man(int window_id, char* command_parameter){
 	int command_match_found = 0;
 	if(command_parameter != "None"){
 		for(int i = 0; i < TOTAL_SHELL_COMMANDS; i++){
-			if(str_compare(command_parameter, shell_commands[i][0])){
+			if(str_compare(trim_trailing_white_spaces(command_parameter), shell_commands[i][0])){
 				wm_print(window_id, "%s\n", shell_commands[i][1]);
 				command_match_found = 1;
 			}
@@ -240,7 +259,7 @@ void list_processes(int window_id, char* command_parameter){
 	PCB *process = pcb;
 	int print_all_details = 0;
 
-	if(str_compare(command_parameter, "-d")){
+	if(str_compare(trim_trailing_white_spaces(command_parameter), "-d")){
 		print_all_details = 1;
 	}
 	else if(str_compare(command_parameter, "None")){
@@ -265,11 +284,12 @@ void print_processes_until_keyboard_interrupt(int window_id){
 	int keyboard_interrupt = 1;
 	while(keyboard_interrupt){
 		list_processes(window_id, "-d");
-		if(keyb_get_keystroke(window_id, TRUE)){
+		wm_print(window_id, "\n\n\n\n\n\n\n\n");
+		if(keyb_get_keystroke(window_id, FALSE)){
 			keyboard_interrupt = 0;
 		}
 	}
-	wm_print(window_id, "There was a keyboard interrupt detected.\n");
+	wm_print(window_id, "Keyboard interrupt detected.\n");
 	// view_available_commands(window_id);
 }
 
@@ -355,7 +375,7 @@ void shell_process(PROCESS process, PARAM param){
 
 			case NEXT_LINE:
 				wm_print(window_id, "\n");
-				wm_print(window_id, "The command: %s\n", command);
+				// wm_print(window_id, "The command: %s\n", command);
 				find_command(window_id, command, command_index);
 				command = malloc(MAX_COMMAND_LENGTH);
 				command_index = 0;
