@@ -27,6 +27,20 @@ Student Email: samudhu@mail.sfsu.edu
 #define BACKSPACE 8
 
 
+typedef struct __WM {
+    int             window_id;
+    int             x,
+                    y;
+    int             width,
+                    height;
+    int             cursor_x,
+                    cursor_y;
+    char            cursor_char;
+    char           *buffer;
+    struct __WM    *next;
+} WM;
+
+
 int window_id_counter = 0;
 
 struct command_components{
@@ -309,26 +323,28 @@ void list_processes(int window_id, char* command_parameter){
 
 
 /* Returns a count of processes from the process table. */
-int process_count(){
-	PCB *process = pcb;
-	int process_count = 0;
-	for (int i = 0; i < MAX_PROCS; i++, process++) {
-        if (!process->used)
-            continue;
-        process_count++;
-    }
-    return process_count;
-}
+// int process_count(){
+// 	PCB *process = pcb;
+// 	int process_count = 0;
+// 	for (int i = 0; i < MAX_PROCS; i++, process++) {
+//         if (!process->used)
+//             continue;
+//         process_count++;
+//     }
+//     return process_count;
+// }
 
 
 /* Prints all process details until a keyboard interrupt occurs. */
 void print_processes_until_keyboard_interrupt(int window_id){
 	int keyboard_interrupt = 1;
+	int count = 0;
+	char           *buffer = wm_get_buffer(window_id);
 	while(keyboard_interrupt){
+		sleep(20);
+		clear_screen(window_id);
 		list_processes(window_id, "-d");
-		for(int i = 0; i < (MAX_PROCS - process_count()); i++){
-			wm_print(window_id, "\n");
-		}
+		
 		if(keyb_get_keystroke(window_id, FALSE)){
 			keyboard_interrupt = 0;
 		}
