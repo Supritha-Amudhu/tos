@@ -27,22 +27,6 @@ Student Email: samudhu@mail.sfsu.edu
 #define BACKSPACE 8
 
 
-typedef struct __WM {
-    int             window_id;
-    int             x,
-                    y;
-    int             width,
-                    height;
-    int             cursor_x,
-                    cursor_y;
-    char            cursor_char;
-    char           *buffer;
-    struct __WM    *next;
-} WM;
-
-
-int window_id_counter = 0;
-
 struct command_components{
 	char* command;
 	char* parameter;
@@ -77,6 +61,8 @@ void view_available_commands(int window_id){
 
 /*  List of all helper processes */
 
+
+/* Trim whitespaces before a command, split command and command parameter and return as a Struct */
 struct command_components trim_white_spaces(int window_id, char* input, int input_length){
 	char* output_command = malloc(MAX_COMMAND_LENGTH);
 	char* command_parameter = malloc(MAX_COMMAND_LENGTH);
@@ -322,19 +308,6 @@ void list_processes(int window_id, char* command_parameter){
 }
 
 
-/* Returns a count of processes from the process table. */
-// int process_count(){
-// 	PCB *process = pcb;
-// 	int process_count = 0;
-// 	for (int i = 0; i < MAX_PROCS; i++, process++) {
-//         if (!process->used)
-//             continue;
-//         process_count++;
-//     }
-//     return process_count;
-// }
-
-
 /* Prints all process details until a keyboard interrupt occurs. */
 void print_processes_until_keyboard_interrupt(int window_id){
 	int keyboard_interrupt = 1;
@@ -444,8 +417,6 @@ void execute_shell_commands(int window_id, int command_index, char* command_para
 /* The method that gets executed when a shell process is created and executed. */
 void shell_process(PROCESS process, PARAM param){
 	int window_id = wm_create(1, 1, 65, 22);
-	window_id_array[window_id_counter] = window_id;
-	window_id_counter++;
 	view_available_commands(window_id);
 	wm_print(window_id, "\n%s", TERMINAL_SYMBOL);
 	char* command = malloc(MAX_COMMAND_LENGTH);
@@ -486,7 +457,6 @@ void shell_process(PROCESS process, PARAM param){
 			case TAB_SPACE:
 				command[command_index] = key;
 				command_index++;
-				wm_print(window_id, "Does it come here?\t");
 			break;
 
 			/* Every character typed by the user queued up as in the command string. */
