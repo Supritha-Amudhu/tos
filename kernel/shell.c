@@ -15,10 +15,13 @@ Student Email: samudhu@mail.sfsu.edu
 #define COMMAND_PS 5
 #define COMMAND_TOP 6
 #define COMMAND_ABOUT 7
+#define COMMAND_TRAIN 8
 
-#define TOTAL_SHELL_COMMANDS 8
+#define TOTAL_SHELL_COMMANDS 9
 #define MAX_COMMAND_LENGTH 500
 
+#define SHELL_WINDOW_WIDTH 65
+#define SHELL_WINDOW_HEIGHT 22
 #define EMPTY_SPACE_STRING " "
 #define EMPTY_SPACE_CHAR ' '
 #define TERMINAL_SYMBOL ">>"
@@ -32,7 +35,7 @@ struct command_components{
 	char* parameter;
 };
 
-static char* shell_commands[8][3] = {
+static char* shell_commands[9][3] = {
 							{"man", "Print a short description for a command                          or list all commands", "Print a short description for a command or list all commands"},
 							{"clear", "Clear the current window", "Clear the current window"},
 							{"shell", "Launch a new Shell", "Launch a new Shell"},
@@ -40,7 +43,8 @@ static char* shell_commands[8][3] = {
 							{"echo", "Print a message on the Screen", "Print a message on the Screen"},
 							{"ps", "Print a list of TOS processes", "Print a list of TOS processes"},
 							{"top", "Print the Process table every second unt                         il interrupted", "Print the Process table every second until interrupted"},
-							{"about", "Print your name", "Print your name"}
+							{"about", "Print your name", "Print your name"},
+							{"train", "Launch the train application", "Launch the train application"}
 						};
 
 int* window_id_array[MAX_PROCS];
@@ -55,6 +59,7 @@ void view_available_commands(int window_id){
 	wm_print(window_id, "6. ps <-d>       -       %s\n", shell_commands[5][1]);
 	wm_print(window_id, "7. top           -       %s\n", shell_commands[6][1]);
 	wm_print(window_id, "8. about         -       %s\n", shell_commands[7][1]);
+	wm_print(window_id, "9. train         -       %s\n", shell_commands[8][1]);
 	wm_print(window_id, "\nPlease choose an option:\n\n");
 }
 
@@ -331,6 +336,10 @@ void print_about(int window_id){
 	wm_print(window_id, "Hey there! I am Supritha Amudhu, a passionate programmer and a bibliophile. :)\n");
 }
 
+void start_train(){
+	init_train();
+}
+
 
 /* Method that is called after the mapping of shell commands to the array shell_commands is done.
 	This method has a set of switch cases that will call the respective methods for each available command. */
@@ -402,6 +411,15 @@ void execute_shell_commands(int window_id, int command_index, char* command_para
 			}
 		break;
 
+		case COMMAND_TRAIN:
+			if(command_parameter != "None"){
+				wm_print(window_id, "Sorry, command not found. Please try another command.\n");
+			}
+			else{
+				start_train();
+			}
+		break;
+
 		/* Default case if there is no command mapping. */
 		default:
 			wm_print(window_id, "Sorry, command not found. Please try another command.\n");
@@ -416,7 +434,7 @@ void execute_shell_commands(int window_id, int command_index, char* command_para
 
 /* The method that gets executed when a shell process is created and executed. */
 void shell_process(PROCESS process, PARAM param){
-	int window_id = wm_create(1, 1, 65, 22);
+	int window_id = wm_create(1, 1, SHELL_WINDOW_WIDTH, SHELL_WINDOW_HEIGHT);
 	view_available_commands(window_id);
 	wm_print(window_id, "\n%s", TERMINAL_SYMBOL);
 	char* command = malloc(MAX_COMMAND_LENGTH);
