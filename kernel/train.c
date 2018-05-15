@@ -8,7 +8,7 @@ Student Email: samudhu@mail.sfsu.edu
 
 #define TRAIN_WINDOW_WIDTH 50
 #define TRAIN_WINDOW_HEIGHT 16
-#define SLEEP_TICKS 2
+#define SLEEP_TICKS 3
 
 #define CONFIGURATION_COUNT 1
 #define SWITCH_COUNT 5
@@ -90,7 +90,7 @@ int probe_contact(int window_id, char* contact, int timer){
 		probe_message.input_buffer = buffer;
 		probe_message.len_input_buffer = 3;
 
-		sleep(SLEEP_TICKS);
+		sleep(2);
 		send(com_port, &probe_message);
 
 		probe_status = buffer[1] - '0';
@@ -106,8 +106,8 @@ int probe_contact(int window_id, char* contact, int timer){
 	
 }
 
-int confirm_configuration(window_id){
-	wm_print(window_id, "Confirming configuration of train.\n");
+int confirm_train_wagon_positions(window_id){
+	wm_print(window_id, "Confirming positions of train and wagon.\n");
 
 	char* train_position[] = {
 		"C5\015",
@@ -116,13 +116,22 @@ int confirm_configuration(window_id){
 		"C16\015"
 	};
 
+	char* wagon_position[] = {
+		"C12\015",
+		"C2\015",
+		"C2\015",
+		"C8\015"
+	};
+
 	int train_status = 0;
+	int wagon_status = 0;
 
 	for(int i = 0; i < CONFIGURATION_COUNT; i++){
-			train_status = probe_contact(window_id, train_position[i], 1);
+			train_status = probe_contact(window_id, train_position[i], 10);
+			wagon_status = probe_contact(window_id, wagon_position[i], 10);
 
-			if(train_status == 1){
-				wm_print(window_id, "Configuration confirmed: %d\n", train_status);
+			if(train_status == 1 && wagon_status == 1){
+				wm_print(window_id, "Train and Wagon in position: %d and %d\n", train_status, wagon_status);
 				return train_status;
 			}
 		}
@@ -167,30 +176,35 @@ void configuration_1(int window_id, int zamboni){
 	toggle_switch(window_id, "M7G\015");
 	toggle_switch(window_id, "M2R\015");
 
-	if(zamboni == 1)
-	{
+	if(zamboni == 1){
 		status = probe_contact(window_id, "C7\015", 60);
 	}
 
 	change_speed(window_id, "L20S5\015");
 
-	if(zamboni == 1)
-	{
-		status = probe_contact(window_id, "C10\015", 10);
+	if(zamboni == 1){
+		status = probe_contact(window_id, "C10\015", 20);
 	}
 
 	toggle_switch(window_id, "M5R\015");
 
-	status = probe_contact(window_id, "C9\015", 10);
+	status = probe_contact(window_id, "C9\015", 20);
 
 	toggle_switch(window_id, "M5G\015");
 
-	status = probe_contact(window_id, "C15\015", 10);
+	if(zamboni == 1){
+		status = probe_contact(window_id, "C15\015", 20);
+		change_speed(window_id, "L20S4\015");
+		sleep(SLEEP_TICKS);
+	}
 
+	status = probe_contact(window_id, "C15\015", 20);
+	change_speed(window_id, "L20S3\015");
 	change_speed(window_id, "L20S2\015");
 	change_speed(window_id, "L20S0\015");
 
 	set_train_direction(window_id, "L20D\015");
+	change_speed(window_id, "L20S5\015");
 
 	toggle_switch(window_id, "M1R\015");
 	toggle_switch(window_id, "M2G\015");
@@ -199,144 +213,114 @@ void configuration_1(int window_id, int zamboni){
 
 	toggle_switch(window_id, "M1G\015");
 
-	// status = probe_contact(window_id, "C7\015", 30);
-	// toggle_switch(window_id, "M5R\015");
+	status = probe_contact(window_id, "C6\015", 20);
 
-	// status = probe_contact(window_id, "C9\015", 30);
+	change_speed(window_id, "L20S2\015");
+	change_speed(window_id, "L20S0\015");
+	set_train_direction(window_id, "L20D\015");
+	change_speed(window_id, "L20S5\015");
 
-	// change_speed(window_id, "L20S2\015");
-	// change_speed(window_id, "L20S0\015");
+	toggle_switch(window_id, "M4R\015");
+	toggle_switch(window_id, "M3R\015");
 
+	status = probe_contact(window_id, "C5\015", 20);
 
-
-
-
-
-
-	// if(zamboni == 1){
-
-	// 	toggle_switch(window_id, "M4G\015");
-
-	// 	status = probe_contact(window_id, "C6\015", 10);
-
-	// 	toggle_switch(window_id, "M5G\015");
-	// 	toggle_switch(window_id, "M8G\015");
-	// 	toggle_switch(window_id, "M9R\015");
-	// 	toggle_switch(window_id, "M1G\015");
-
-	// 	if(status){
-	// 		change_speed(window_id, "L20S5\015");
-	// 	}
-
-	// 	status = probe_contact(window_id, "C10\015", 10);
-
-	// 	if(status){
-	// 		toggle_switch(window_id, "M5R\015");
-	// 		toggle_switch(window_id, "M6G\015");
-	// 		toggle_switch(window_id, "M7G\015");
-	// 	}
-
-	// 	status = probe_contact(window_id, "C12\015", 10);
-
-	// 	if(status){
-	// 		toggle_switch(window_id, "M2R\015");
-	// 		change_speed(window_id, "L20S0\015");
-	// 	}
-
-	// 	set_train_direction(window_id, "L20D\015");
-	// 	toggle_switch(window_id, "M2G\015");
-
-
-	// 	status = probe_contact(window_id, "C14\015", 10);
-
-	// 	if(status){
-	// 		wm_print(window_id, "Zamboni detected in 14.");
-	// 		toggle_switch(window_id, "M1G\015");
-	// 	}
-
-	// 	status = probe_contact(window_id, "C2\015", 10);
-
-	// 	if(status){
-	// 		toggle_switch(window_id, "M3R\015");
-	// 	}
-
-	// 	toggle_switch(window_id, "M3R\015");
-
-	// 	status = probe_contact(window_id, "C5\015", 10);
-
-	// 	if(status){
-	// 		wm_print(window_id, "Destination reached Yayyyy!!");
-	// 	}
-
-	// }
-	
-
-
-
-
-
-	
-
-
-	// change_speed(window_id, "L20S1\015");
-
-	// status = probe_contact(window_id, "C12\015", 30);
-
-	// if(status){	
-	// 	toggle_switch(window_id, "M5R\015");
-	// 	change_speed(window_id, "L20S0\015");
-	// }
-
-	// status = probe_contact(window_id, "C15\015", 10);
-
-	// sleep(SLEEP_TICKS);
-
-	// if(status){
-	// 	change_speed(window_id, "L20S5\015");
-	// }
-
-	// status = probe_contact(window_id, "C15\015", 30);
-
-	// if(status){	
-	// 	change_speed(window_id, "L20S0\015");
-	// }
-
-	// set_train_direction(window_id, "L20D\015");
-
-	// toggle_switch(window_id, "M1R\015");
-	// toggle_switch(window_id, "M2G\015");
-
-	// status = probe_contact(window_id, "C1\015", 10);
-
-	// if(status){
-	// 	toggle_switch(window_id, "M1G\015");
-	// 	change_speed(window_id, "L20S0\015");
-	// }
-
-	// status = probe_contact(window_id, "C6\015", 10);
-
-	// if(status){
-	// 	toggle_switch(window_id, "M3G\015");
-	// }
-
-	// status = probe_contact(window_id, "C6\015", 10);
-
-	// if(status){
-	// 	toggle_switch(window_id, "M3G\015");
-	// }
-
-	// set_train_direction(window_id, "L20D\015");
-	// toggle_switch(window_id, "M3R\015");
-
+	change_speed(window_id, "L20S2\015");
+	change_speed(window_id, "L20S1\015");
+	change_speed(window_id, "L20S0\015");
 	
 }
 
 void configuration_2(int window_id, int zamboni){
 	wm_print(window_id, "Configuration 2.\n");
+	int status = 0;
+
+	toggle_switch(window_id, "M1G\015");
+	toggle_switch(window_id, "M9R\015");
+	toggle_switch(window_id, "M8G\015");
+	toggle_switch(window_id, "M5G\015");
+	toggle_switch(window_id, "M4G\015");
+	toggle_switch(window_id, "M2G\015");
+	toggle_switch(window_id, "M7R\015");
+	toggle_switch(window_id, "M3G\015");
+
+	if(zamboni == 1){
+		status = probe_contact(window_id, "C10\015", 60);
+	}
+
+	set_train_direction(window_id, "L20D\015");
+	change_speed(window_id, "L20S5\015");
+
+	status = probe_contact(window_id, "C13\015", 60);
+	change_speed(window_id, "L20S2\015");
+	change_speed(window_id, "L20S0\015");
+	set_train_direction(window_id, "L20D\015");
+	change_speed(window_id, "L20S5\015");
+
+	if(zamboni == 1){
+		status = probe_contact(window_id, "C4\015", 60);
+	}
+	toggle_switch(window_id, "M4R\015");
+
+	status = probe_contact(window_id, "C1\015", 60);
+	toggle_switch(window_id, "M4G\015");
+
+	if(zamboni == 1){
+		status = probe_contact(window_id, "C10\015", 60);
+	}
+	toggle_switch(window_id, "M8R\015");
+
+	status = probe_contact(window_id, "C13\015", 60);
+	change_speed(window_id, "L20S4\015");
+	change_speed(window_id, "L20S3\015");
+
+	status = probe_contact(window_id, "C11\015", 60);
+	change_speed(window_id, "L20S2\015");
+	change_speed(window_id, "L20S0\015");
+	toggle_switch(window_id, "M8G\015");
+
 }
 
 void configuration_3(int window_id, int zamboni){
 	wm_print(window_id, "Configuration 3.\n");
+	int status = 0;
+
+	toggle_switch(window_id, "M1G\015");
+	toggle_switch(window_id, "M9R\015");
+	toggle_switch(window_id, "M8G\015");
+	toggle_switch(window_id, "M5G\015");
+	toggle_switch(window_id, "M4G\015");
+	toggle_switch(window_id, "M2G\015");
+	toggle_switch(window_id, "M7R\015");
+	toggle_switch(window_id, "M3G\015");
+
+	if(zamboni == 1){
+		status = probe_contact(window_id, "C13\015", 60);
+	}
+
+	change_speed(window_id, "L20S5\015");
+
+	if(zamboni == 1){
+		status = probe_contact(window_id, "C4\015", 60);
+	}
+	toggle_switch(window_id, "M4R\015");
+	status = probe_contact(window_id, "C1\015", 60);
+	toggle_switch(window_id, "M4G\015");
+
+	if(zamboni == 1){
+		status = probe_contact(window_id, "C4\015", 60);
+	}
+	toggle_switch(window_id, "M4R\015");
+
+	status = probe_contact(window_id, "C6\015", 60);
+	change_speed(window_id, "L20S4\015");
+	change_speed(window_id, "L20S3\015");
+
+	status = probe_contact(window_id, "C2\015", 60);
+	change_speed(window_id, "L20S2\015");
+	change_speed(window_id, "L20S0\015");
+	toggle_switch(window_id, "M4G\015");
+
 }
 
 void configuration_4(int window_id, int zamboni){
@@ -350,7 +334,7 @@ void train_process(PROCESS self, PARAM param)
 	
 	initialize_train_tracks(window_id);
 
-	int configuration = confirm_configuration(window_id);
+	// int configuration = confirm_train_wagon_positions(window_id);
 
 	wm_print(window_id, "Checking for Zamboni.\n");
 	int zamboni = probe_contact(window_id, "C4\015", 30);
@@ -362,7 +346,7 @@ void train_process(PROCESS self, PARAM param)
 		wm_print(window_id, "The coast is clear! No Zamboni!\n");
 	}
 
-	switch(configuration){
+	switch(3){
 
 		case 1:
 			configuration_1(window_id, zamboni);
