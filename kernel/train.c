@@ -286,7 +286,7 @@ void configuration_3(int window_id, int zamboni){
 	int status = 0;
 
 	toggle_switch(window_id, "M1G\015");
-	toggle_switch(window_id, "M9R\015");
+	toggle_switch(window_id, "M9G\015");
 	toggle_switch(window_id, "M8G\015");
 	toggle_switch(window_id, "M5G\015");
 	toggle_switch(window_id, "M4G\015");
@@ -307,19 +307,18 @@ void configuration_3(int window_id, int zamboni){
 	status = probe_contact(window_id, "C1\015", 60);
 	toggle_switch(window_id, "M4G\015");
 
-	if(zamboni == 1){
-		status = probe_contact(window_id, "C4\015", 60);
-	}
-	toggle_switch(window_id, "M4R\015");
-
-	status = probe_contact(window_id, "C6\015", 60);
+	status = probe_contact(window_id, "C15\015", 60);
 	change_speed(window_id, "L20S4\015");
-	change_speed(window_id, "L20S3\015");
 
-	status = probe_contact(window_id, "C2\015", 60);
+	status = probe_contact(window_id, "C14\015", 60);
 	change_speed(window_id, "L20S2\015");
 	change_speed(window_id, "L20S0\015");
-	toggle_switch(window_id, "M4G\015");
+	set_train_direction(window_id, "L20D\015");
+	change_speed(window_id, "L20S4\015");
+
+	status = probe_contact(window_id, "C16\015", 60);
+	change_speed(window_id, "L20S2\015");
+	change_speed(window_id, "L20S0\015");
 
 }
 
@@ -337,7 +336,7 @@ void train_process(PROCESS self, PARAM param)
 	// int configuration = confirm_train_wagon_positions(window_id);
 
 	wm_print(window_id, "Checking for Zamboni.\n");
-	int zamboni = probe_contact(window_id, "C4\015", 30);
+	int zamboni = probe_contact(window_id, "C4\015", 2);
 
 	if(zamboni){
 		wm_print(window_id, "RUN! Zamboni detected!\n");
