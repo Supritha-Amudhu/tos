@@ -223,7 +223,7 @@ void configuration_1(int window_id, int zamboni){
 	change_speed(window_id, "L20S4\015");
 	change_speed(window_id, "L20S3\015");
 	change_speed(window_id, "L20S2\015");
-	change_speed(window_id, "L20S1\015");
+	// change_speed(window_id, "L20S1\015");
 	change_speed(window_id, "L20S0\015");
 	wm_print(window_id, "Hurraaayyy! Configuration 1 is done. I get my bonus! ^_^\n");
 	become_zombie();
