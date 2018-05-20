@@ -1,0 +1,25 @@
+Plex86/Bochs VGABios (PCI) current-cvs 26 Jan 2018
+This VGA/VBE Bios is released under the GNU LGPL
+
+Please visit :
+ . http://bochs.sourceforge.net
+ . http://www.nongnu.org/vgabios
+
+NO Bochs VBE Support available!
+
+Bochs BIOS - build: 01/28/18
+$Revision: 13453 $ $Date: 2018-01-28 12:59:13 +0100 (So, 28. Jan 2018) $
+Options: apmbios pcibios pnpbios eltorito rombios32
+
+
+Press F12 for boot menu.
+
+ß
+
+
+
+
+
+
+
+
