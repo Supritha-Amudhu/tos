@@ -20,6 +20,7 @@ Student Email: samudhu@mail.sfsu.edu
 // run the train application
 // **************************
 
+/* Method that wll reverse the direction of the train */
 void set_train_direction(int window_id, char* direction){
 	sleep(SLEEP_TICKS);
 
@@ -30,10 +31,13 @@ void set_train_direction(int window_id, char* direction){
 	direction_message.len_input_buffer = 0;
 
 	send(com_port, &direction_message);
+	sleep(SLEEP_TICKS);
 
 	wm_print(window_id, "Changing direction of train to: %s\n", direction);
 }
 
+
+/* This method clears the output memory buffer */
 void clear_memory_buffer(int window_id){
 	COM_Message clear_buffer;
 
@@ -45,6 +49,8 @@ void clear_memory_buffer(int window_id){
 	send(com_port, &clear_buffer);
 }
 
+
+/* This method toggles a switch between Red and Green based on the command being sent as active_switch */
 void toggle_switch(int window_id, char* active_switch){
 	sleep(SLEEP_TICKS);
 
@@ -55,11 +61,12 @@ void toggle_switch(int window_id, char* active_switch){
 	toggle_switch_message.len_input_buffer = 0;
 
 	send(com_port, &toggle_switch_message);
+	sleep(SLEEP_TICKS);
 
 	wm_print(window_id, "Toggling switch: %s\n", active_switch);
 }
 
-
+/* This method changes the speed of the train with and without the wagon */
 void change_speed(int window_id, char* speed){
 	sleep(SLEEP_TICKS);
 
@@ -70,10 +77,12 @@ void change_speed(int window_id, char* speed){
 	speed_change_message.len_input_buffer = 0;
 
 	send(com_port, &speed_change_message);
+	sleep(SLEEP_TICKS);
 
 	wm_print(window_id, "Changing speed of train to: %d\n", speed);
 }
 
+/* This metod probes a Contact and checks if there is either a train/wagon/Zamboni on that Contact */
 int probe_contact(int window_id, char* contact, int timer){
 	wm_print(window_id, "Probing contact: %s\n", contact);
 
@@ -90,7 +99,7 @@ int probe_contact(int window_id, char* contact, int timer){
 		probe_message.input_buffer = buffer;
 		probe_message.len_input_buffer = 3;
 
-		// sleep(SLEEP_TICKS - 1);
+		sleep(SLEEP_TICKS);
 		send(com_port, &probe_message);
 
 		probe_status = buffer[1] - '0';
@@ -105,6 +114,7 @@ int probe_contact(int window_id, char* contact, int timer){
 	
 }
 
+/* The method confirms the type of configuration by checking out the positions of the train and wagon */
 int confirm_train_wagon_positions(window_id){
 	wm_print(window_id, "Confirming positions of train and wagon.\n");
 
@@ -136,6 +146,7 @@ int confirm_train_wagon_positions(window_id){
 	return 0;
 }
 
+/* The method that sets up all of the initial switches so that the Zamboni always travels in the outer loop. */
 void initialize_train_tracks(int window_id){
 	wm_print(window_id, "Setting up switches. \n");
 	wm_print(window_id, "Setting up train tracks. \n");
@@ -157,10 +168,13 @@ void initialize_train_tracks(int window_id){
 		message.len_input_buffer = 0;
 
 		send(com_port, &message);
+		sleep(SLEEP_TICKS - 1);
 		wm_print(window_id, "%s\n", message.output_buffer);
 	}
 }
 
+
+/* Code for running Configuration 1 with and without Zamboni  */
 void configuration_1(int window_id, int zamboni){
 	wm_print(window_id, "Configuration 1.\n");
 	int status = 0;
@@ -170,6 +184,8 @@ void configuration_1(int window_id, int zamboni){
 	toggle_switch(window_id, "M7G\015");
 	toggle_switch(window_id, "M2R\015");
 
+	sleep(SLEEP_TICKS - 1);
+
 	if(zamboni == 1){
 		status = probe_contact(window_id, "C7\015", 60);
 	}
@@ -177,24 +193,23 @@ void configuration_1(int window_id, int zamboni){
 	change_speed(window_id, "L20S5\015");
 
 	if(zamboni == 1){
-		status = probe_contact(window_id, "C10\015", 20);
+		status = probe_contact(window_id, "C10\015", 60);
 	}
 
+	change_speed(window_id, "L20S4\015");
 	toggle_switch(window_id, "M5R\015");
+	change_speed(window_id, "L20S5\015");
 
-	status = probe_contact(window_id, "C9\015", 20);
+	status = probe_contact(window_id, "C9\015", 60);
 
 	toggle_switch(window_id, "M5G\015");
 	change_speed(window_id, "L20S4\015");
 
-	if(zamboni == 1){
-		status = probe_contact(window_id, "C15\015", 20);
-		sleep(SLEEP_TICKS - 2);
-	}
-
-	status = probe_contact(window_id, "C15\015", 20);
+	status = probe_contact(window_id, "C12\015", 80);
 	change_speed(window_id, "L20S3\015");
+	status = probe_contact(window_id, "C12\015", 80);
 	change_speed(window_id, "L20S2\015");
+	status = probe_contact(window_id, "C12\015", 80);
 	change_speed(window_id, "L20S0\015");
 
 	toggle_switch(window_id, "M1R\015");
@@ -203,11 +218,11 @@ void configuration_1(int window_id, int zamboni){
 	set_train_direction(window_id, "L20D\015");
 	change_speed(window_id, "L20S5\015");
 
-	status = probe_contact(window_id, "C1\015", 20);
+	status = probe_contact(window_id, "C1\015", 80);
 
 	toggle_switch(window_id, "M1G\015");
 
-	status = probe_contact(window_id, "C6\015", 20);
+	status = probe_contact(window_id, "C6\015", 80);
 
 	toggle_switch(window_id, "M4R\015");
 	toggle_switch(window_id, "M3R\015");
@@ -216,20 +231,18 @@ void configuration_1(int window_id, int zamboni){
 	change_speed(window_id, "L20S0\015");
 	set_train_direction(window_id, "L20D\015");
 	
-	change_speed(window_id, "L20S5\015");
-	change_speed(window_id, "L20S5\015");
-
-	status = probe_contact(window_id, "C5\015", 20);
 	change_speed(window_id, "L20S4\015");
+
+	status = probe_contact(window_id, "C5\015", 80);
 	change_speed(window_id, "L20S3\015");
 	change_speed(window_id, "L20S2\015");
-	// change_speed(window_id, "L20S1\015");
 	change_speed(window_id, "L20S0\015");
-	wm_print(window_id, "Hurraaayyy! Configuration 1 is done. I get my bonus! ^_^\n");
+	wm_print(window_id, "Hurraaayyy! Configuration 1 is done!\n");
 	become_zombie();
 	
 }
 
+/* Code for running Configuration 2 with and without Zamboni  */
 void configuration_2(int window_id, int zamboni){
 	wm_print(window_id, "Configuration 2.\n");
 	int status = 0;
@@ -242,6 +255,8 @@ void configuration_2(int window_id, int zamboni){
 	toggle_switch(window_id, "M2G\015");
 	toggle_switch(window_id, "M7R\015");
 	toggle_switch(window_id, "M3G\015");
+
+	sleep(SLEEP_TICKS - 1);
 
 	if(zamboni == 1){
 		status = probe_contact(window_id, "C10\015", 60);
@@ -277,10 +292,11 @@ void configuration_2(int window_id, int zamboni){
 	change_speed(window_id, "L20S2\015");
 	change_speed(window_id, "L20S0\015");
 	toggle_switch(window_id, "M8G\015");
-	wm_print(window_id, "Hurraaayyy! Configuration 2 is done. I get my bonus! ^_^\n");
+	wm_print(window_id, "Hurraaayyy! Configuration 2 is done!\n");
 	become_zombie();
 }
 
+/* Code for running Configuration 3 with and without Zamboni  */
 void configuration_3(int window_id, int zamboni){
 	wm_print(window_id, "Configuration 3.\n");
 	int status = 0;
@@ -293,6 +309,8 @@ void configuration_3(int window_id, int zamboni){
 	toggle_switch(window_id, "M2G\015");
 	toggle_switch(window_id, "M7R\015");
 	toggle_switch(window_id, "M3G\015");
+
+	sleep(SLEEP_TICKS - 1);
 
 	if(zamboni == 1){
 		status = probe_contact(window_id, "C13\015", 60);
@@ -320,10 +338,11 @@ void configuration_3(int window_id, int zamboni){
 	change_speed(window_id, "L20S3\015");
 	change_speed(window_id, "L20S2\015");
 	change_speed(window_id, "L20S0\015");
-	wm_print(window_id, "Hurraaayyy! Configuration 3 is done. I get my bonus! ^_^\n");
+	wm_print(window_id, "Hurraaayyy! Configuration 3 is done!\n");
 	become_zombie();
 }
 
+/* Code for running Configuration 4 with and without Zamboni  */
 void configuration_4(int window_id, int zamboni){
 	wm_print(window_id, "Configuration 4.\n");
 	int status = 0;
@@ -337,6 +356,8 @@ void configuration_4(int window_id, int zamboni){
 	toggle_switch(window_id, "M7R\015");
 	toggle_switch(window_id, "M3G\015");
 	toggle_switch(window_id, "M6R\015");
+
+	sleep(SLEEP_TICKS - 1);
 
 	if(zamboni == 1){
 		status = probe_contact(window_id, "C10\015", 60);
@@ -361,11 +382,10 @@ void configuration_4(int window_id, int zamboni){
 	change_speed(window_id, "L20S5\015");
 
 	status = probe_contact(window_id, "C7\015", (SLEEP_TICKS - 1));
-	change_speed(window_id, "L20S5\015");
+	change_speed(window_id, "L20S4\015");
 
 	status = probe_contact(window_id, "C8\015", (SLEEP_TICKS - 1));
-	change_speed(window_id, "L20S4\015");
-	// change_speed(window_id, "L20S3\015");
+	change_speed(window_id, "L20S3\015");
 	status = probe_contact(window_id, "C8\015", (SLEEP_TICKS - 1));
 	change_speed(window_id, "L20S2\015");
 	status = probe_contact(window_id, "C8\015", (SLEEP_TICKS - 1));
@@ -380,7 +400,7 @@ void configuration_4(int window_id, int zamboni){
 	change_speed(window_id, "L20S5\015");
 
 	if(zamboni == 1){
-		status = probe_contact(window_id, "C15\015", 60);
+		status = probe_contact(window_id, "C14\015", 60);
 	}
 	status = probe_contact(window_id, "C15\015", 60);
 	change_speed(window_id, "L20S4\015");
@@ -401,10 +421,12 @@ void configuration_4(int window_id, int zamboni){
 	change_speed(window_id, "L20S2\015");
 	change_speed(window_id, "L20S1\015");
 	change_speed(window_id, "L20S0\015");
-	wm_print(window_id, "Hurraaayyy! Configuration 4 is done. I get my bonus! ^_^\n");
+	wm_print(window_id, "Hurraaayyy! Configuration 4 is done!\n");
 	become_zombie();
 }
 
+/* The train process that checks for the position of the train, decides on the configuration type without
+ or without Zamboni. */
 void train_process(PROCESS self, PARAM param)
 {
 	int window_id = wm_create(6, 4, TRAIN_WINDOW_WIDTH, TRAIN_WINDOW_HEIGHT);
@@ -422,7 +444,6 @@ void train_process(PROCESS self, PARAM param)
 	else{
 		wm_print(window_id, "The coast is clear! No Zamboni!\n");
 	}
-	// int zamboni = 1;
 	switch(configuration){
 
 		case 1:
@@ -452,6 +473,7 @@ void train_process(PROCESS self, PARAM param)
 }
 
 
+/* The init function that is called from the Shell script on typing 'Train'. */
 void init_train()
 {
 	PORT train_port = create_process(train_process, 5, 0, "Model Train Process");
